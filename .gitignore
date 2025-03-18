@@ -1,0 +1,20 @@
+# ==========================
+# Backend
+# ==========================
+backend/node_modules/
+backend/dist/
+backend/build/
+backend/.env
+backend/.cache/
+backend/logs/
+
+# ==========================
+# Frontend
+# ==========================
+frontend/node_modules/
+frontend/dist/
+frontend/build/
+frontend/.env
+frontend/.next/   
+frontend/.cache/
+frontend/.parcel-cache/
