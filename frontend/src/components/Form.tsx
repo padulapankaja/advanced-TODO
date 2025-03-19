@@ -13,9 +13,14 @@ import { FormData } from "../types/todoTypes";
 interface TaskFormProps {
   onSubmit: (data: FormData) => void;
   onCancel?: () => void;
+  inCompleted: FormData[];
 }
 
-const TaskForm: React.FC<TaskFormProps> = ({ onSubmit, onCancel }) => {
+const TaskForm: React.FC<TaskFormProps> = ({
+  onSubmit,
+  onCancel,
+  inCompleted,
+}) => {
   const {
     register,
     handleSubmit,
@@ -23,6 +28,7 @@ const TaskForm: React.FC<TaskFormProps> = ({ onSubmit, onCancel }) => {
     setValue,
     formState: { errors },
     trigger,
+    reset,
   } = useForm<FormData>({
     defaultValues: {
       priority: "low",
@@ -37,19 +43,19 @@ const TaskForm: React.FC<TaskFormProps> = ({ onSubmit, onCancel }) => {
   const handleRecurrent = (e: React.ChangeEvent<HTMLInputElement>) => {
     const checked = e.target.checked;
     setValue("isRecurrent", checked);
-    if (!checked) setValue("recurrencePattern", "");
   };
 
   const handleDependent = (e: React.ChangeEvent<HTMLInputElement>) => {
     const checked = e.target.checked;
     setValue("isDependent", checked);
-    if (!checked) setValue("dependencies", "");
   };
 
   const handleFormSubmit: SubmitHandler<FormData> = (data) => {
     trigger().then((isValid) => {
-      if (isValid) onSubmit(data);
-      else console.log("Form has errors");
+      if (isValid) {
+        onSubmit(data);
+        reset();
+      } else console.log("Form has errors");
     });
   };
 
@@ -66,19 +72,13 @@ const TaskForm: React.FC<TaskFormProps> = ({ onSubmit, onCancel }) => {
     { value: "monthly", label: "Monthly" },
   ];
 
-  const dependencyOptions = [
-    { value: "2", label: "Lorem 1" },
-    { value: "3", label: "Lorem 2" },
-    { value: "4", label: "Lorem 3" },
-  ];
-
   return (
     <form
       className="max-w-7xl mx-auto border-b border-gray-900/10 pb-12"
       onSubmit={handleSubmit(handleFormSubmit)}
     >
       <div className="space-y-12">
-        <div >
+        <div>
           <h2 className="text-xl sm:text-2xl font-semibold text-gray-900">
             Todo creation form
           </h2>
@@ -113,6 +113,7 @@ const TaskForm: React.FC<TaskFormProps> = ({ onSubmit, onCancel }) => {
               required
               errorMessage={errors.dueDate?.message}
               autoComplete="dueDate"
+              minDate={true}
             />
 
             <ToggleSwitch
@@ -142,7 +143,12 @@ const TaskForm: React.FC<TaskFormProps> = ({ onSubmit, onCancel }) => {
                 <Select
                   id="dependencies"
                   register={register}
-                  options={dependencyOptions}
+                  options={inCompleted.map((task) => {
+                    return {
+                      value: task._id?.toString() || "",
+                      label: task.title,
+                    };
+                  })}
                 />
               )}
             </ToggleSwitch>

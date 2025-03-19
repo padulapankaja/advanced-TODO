@@ -14,7 +14,7 @@ export const createTask = async (req: Request, res: Response, next: NextFunction
 
 export const getTasks = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const tasks = await Task.find();
+    const tasks = await Task.find().populate('dependencies');
     res.json(tasks);
   } catch (error) {
     next(error);
@@ -41,13 +41,14 @@ export const getTask = async (req: Request, res: Response, next: NextFunction) =
 
 export const searchTasks = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const { title, status, priority, isRecurring, dueDate } = req.query;
+    const { title, status, priority, isRecurring, dueDate, isDependency } = req.query;
 
     const filter: any = {
       ...(title && { title: { $regex: new RegExp(title as string, 'i') } }),
       ...(status && { status }),
       ...(priority && { priority }),
       ...(isRecurring !== undefined && { isRecurring: isRecurring === 'true' }),
+      ...(isDependency !== undefined && { isDependency: isDependency === 'true' }),
       ...(dueDate && { dueDate: { $gte: new Date(dueDate as string) } }),
     };
 

@@ -1,5 +1,12 @@
 import express from 'express';
-import { createTask, getTask, getTasks, searchTasks, deleteTask, updateTask } from '../../controllers/taskController';
+import {
+  createTask,
+  getTask,
+  getTasks,
+  searchTasks,
+  deleteTask,
+  updateTask,
+} from '../../controllers/taskController';
 import { validateRequest } from '../../middlewares/validateRequest';
 import { createTaskSchema, updateTaskSchema } from '../../validations/validations';
 
@@ -10,6 +17,6 @@ router.get('/', getTasks);
 router.get('/search', searchTasks);
 router.get('/:id', getTask);
 router.delete('/:id', deleteTask);
-router.patch('/:id',  validateRequest(updateTaskSchema), updateTask);
+router.patch('/:id', validateRequest(updateTaskSchema), updateTask);
 
 export default router;

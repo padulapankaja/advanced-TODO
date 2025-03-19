@@ -8,6 +8,7 @@ export interface ITask extends Document {
   dueDate?: Date;
   dependencies?: mongoose.Types.ObjectId[];
   isRecurring: boolean;
+  isDependency: boolean;
   recurrencePattern?: RecurrencePattern;
 }
 
@@ -19,6 +20,7 @@ const TaskSchema = new Schema<ITask>(
     dueDate: { type: Date },
     dependencies: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Task' }],
     isRecurring: { type: Boolean, default: false },
+    isDependency: { type: Boolean, default: false },
     recurrencePattern: { type: String, enum: Object.values(RecurrencePattern) },
   },
   { timestamps: true },
