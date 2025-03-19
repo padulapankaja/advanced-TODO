@@ -74,11 +74,11 @@ const TaskForm: React.FC<TaskFormProps> = ({ onSubmit, onCancel }) => {
 
   return (
     <form
-      className="max-w-7xl mx-auto"
+      className="max-w-7xl mx-auto border-b border-gray-900/10 pb-12"
       onSubmit={handleSubmit(handleFormSubmit)}
     >
       <div className="space-y-12">
-        <div className="border-b border-gray-900/10 pb-12">
+        <div >
           <h2 className="text-xl sm:text-2xl font-semibold text-gray-900">
             Todo creation form
           </h2>
