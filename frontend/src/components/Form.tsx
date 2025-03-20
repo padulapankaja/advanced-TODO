@@ -14,12 +14,18 @@ interface TaskFormProps {
   onSubmit: (data: FormData) => void;
   onCancel?: () => void;
   inCompleted: FormData[];
+  title: string;
+  description: string;
+  data?: FormData;
 }
 
 const TaskForm: React.FC<TaskFormProps> = ({
   onSubmit,
   onCancel,
   inCompleted,
+  title,
+  description,
+  data,
 }) => {
   const {
     register,
@@ -31,9 +37,19 @@ const TaskForm: React.FC<TaskFormProps> = ({
     reset,
   } = useForm<FormData>({
     defaultValues: {
-      priority: "low",
-      isRecurrent: false,
-      isDependent: false,
+      title: data?.title || "",
+      dueDate: data?.dueDate
+        ? new Date(data.dueDate).toISOString().split("T")[0]
+        : "",
+      priority: data?.priority || "low",
+      isRecurrent: data?.isRecurring || false,
+      isDependent: data?.isDependency || false,
+      recurrencePattern: data?.recurrencePattern || "",
+      dependencies: data?.dependencies
+        ? Array.isArray(data.dependencies)
+          ? data.dependencies
+          : [data.dependencies]
+        : [],
     },
   });
 
@@ -80,11 +96,9 @@ const TaskForm: React.FC<TaskFormProps> = ({
       <div className="space-y-12">
         <div>
           <h2 className="text-xl sm:text-2xl font-semibold text-gray-900">
-            Task creation form
+            {title}
           </h2>
-          <p className="mt-1 text-sm text-gray-600">
-            Please fill details to create a new task
-          </p>
+          <p className="mt-1 text-sm text-gray-600">{description}</p>
 
           <div className="mt-10 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
             <InputField
@@ -143,6 +157,7 @@ const TaskForm: React.FC<TaskFormProps> = ({
                 <Select
                   id="dependencies"
                   register={register}
+                  isDefault
                   options={inCompleted.map((task) => {
                     return {
                       value: task._id?.toString() || "",

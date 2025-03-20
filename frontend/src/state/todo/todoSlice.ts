@@ -4,10 +4,12 @@ import { FormData } from '../../types/todoTypes'
 
 interface TodoState {
   taskToDelete: any | null;
+  taskToUpdate: any | null;
 }
 
 const initialState: TodoState = {
   taskToDelete: null,
+  taskToUpdate: null,
 };
 
 // Create the todoSlice with actions to handle task deletion
@@ -27,6 +29,18 @@ const todoSlice = createSlice({
     cancelDeleteTask: (state) => {
       state.taskToDelete = null;
     },
+    // Action to set a task for deletion (store in taskToUpdate)
+    setTaskToUpdate: (state, action: PayloadAction<FormData>) => {
+      state.taskToUpdate = action.payload;
+    },
+    // Action to confirm deletion and remove the task from tasks
+    confirmUpdateTask: (state) => {
+      state.taskToUpdate = null; // Clear the taskToUpdate after deletion
+    },
+    // Action to cancel the deletion (reset taskToUpdate)
+    cancelUpdateTask: (state) => {
+      state.taskToUpdate = null;
+    },
   },
 });
 
@@ -35,6 +49,9 @@ export const {
   setTaskToDelete,
   confirmDeleteTask,
   cancelDeleteTask,
+  setTaskToUpdate,
+  cancelUpdateTask,
+  confirmUpdateTask
 } = todoSlice.actions;
 
 export default todoSlice.reducer;

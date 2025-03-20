@@ -55,8 +55,8 @@ export const searchTasks = async (req: Request, res: Response, next: NextFunctio
 
     const [tasks, stats] = await Promise.all([
       Object.keys(req.query).length > 0
-        ? Task.find(filter).populate('dependencies')
-        : Task.find().populate('dependencies'),
+        ? Task.find(filter).sort({ updatedAt: -1 }).populate('dependencies')
+        : Task.find().sort({ updatedAt: -1 }).populate('dependencies'),
 
       // Use MongoDB aggregation for statistics
       Task.aggregate([
@@ -100,9 +100,9 @@ export const updateTask = async (req: Request, res: Response, next: NextFunction
       return;
     }
 
-    const updatedTask = await Task.findByIdAndUpdate(req.params.id, req.body, {
-      new: true, // Return the updated document
-      runValidators: true, // Apply schema validation
+    const updatedTask = await Task.findByIdAndUpdate(req.params.id, req.body.todoData, {
+      new: true,
+      runValidators: true,
     });
 
     if (!updatedTask) {

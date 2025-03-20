@@ -1,5 +1,4 @@
 import { UseFormRegister } from "react-hook-form";
-
 import { ChevronDownIcon } from "@heroicons/react/16/solid";
 import { FormData } from "../../types/todoTypes";
 
@@ -8,9 +7,16 @@ interface SelectProps {
   id: string;
   register: UseFormRegister<FormData>;
   options: { value: string; label: string }[];
+  defaultValue?: { value: string; label: string };
+  isDefault?: boolean;
 }
 
-export const Select: React.FC<SelectProps> = ({ id, register, options }) => {
+export const Select: React.FC<SelectProps> = ({
+  id,
+  register,
+  options,
+}) => {
+
   return (
     <div className="mt-2 grid grid-cols-1">
       <select
@@ -32,4 +38,5 @@ export const Select: React.FC<SelectProps> = ({ id, register, options }) => {
     </div>
   );
 };
+
 export default Select;

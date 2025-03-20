@@ -20,7 +20,7 @@ export const todoApi = createApi({
     updateTodos: builder.mutation({
       query: ({ id, ...body }) => ({
         url: `/tasks/${id}`,
-        method: "PUT",
+        method: "PATCH",
         body,
       }),
       invalidatesTags: (_result, _error, { _id }) => [

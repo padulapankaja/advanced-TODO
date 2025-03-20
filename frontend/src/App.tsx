@@ -1,43 +1,48 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { useDispatch, useSelector } from "react-redux";
+import { useState, useCallback, useMemo } from "react";
 import {
   setTaskToDelete,
   cancelDeleteTask,
   confirmDeleteTask,
+  setTaskToUpdate,
+  cancelUpdateTask,
+  confirmUpdateTask,
 } from "./state/todo/todoSlice";
-import { useEffect, useState } from "react";
-import { Header } from "./components/index";
-import TaskForm from "./components/Form";
 import {
   useCreateTodosMutation,
   useDeleteTodosMutation,
   useUpdateStatusTodosMutation,
   useSearchTodosQuery,
+  useUpdateTodosMutation,
 } from "./services/todoService";
+import { Header } from "./components/index";
+import TaskForm from "./components/Form";
 import TaskCard from "./components/Card";
 import ConfirmationModal from "./components/ConfirmationModel";
-import { FormData } from "./types/todoTypes";
 import FilterComponent from "./components/FilterComponent";
+import { FormData } from "./types/todoTypes";
 import { getNotificationMessage } from "./utils";
-type dependentTask = {
+import TaskPopup from "./components/TaskPopup";
+
+type DependentTask = {
   _id: string;
   title: string;
 };
-function App() {
+
+const App = () => {
   const dispatch = useDispatch();
   const taskToDelete = useSelector((state: any) => state.todos?.taskToDelete);
-  // const { data: todos, error, isLoading } = useGetTodosQuery({});
-  const [createTodos, { isLoading: isCreating, isSuccess: isCreated }] =
-    useCreateTodosMutation();
+  const taskToUpdate = useSelector((state: any) => state.todos?.taskToUpdate);
+
+  // Mutations & Queries
+  const [createTodos, { isSuccess: isCreated }] = useCreateTodosMutation();
   const [deleteTodos, { isSuccess: isDeleted }] = useDeleteTodosMutation();
   const [updateStatusTodos, { isSuccess: isStatusUpdate }] =
     useUpdateStatusTodosMutation();
-  const [formError, setFormError] = useState<string | null>(null);
-  const [inCompletedTasks, setInCompletedTasks] = useState<any[]>([]);
-  const [deleteConfirmation, setDeleteConfirmation] = useState<boolean>(false);
-  const [dependentRoot, setDependentRoot] = useState<dependentTask[]>();
-  const [completeAlert, setCompleteAlert] = useState<boolean>(false);
-  const [searchParams, setSearchParams] = useState<any>({});
+  const [updateTodos] = useUpdateTodosMutation();
+
+  const [searchParams, setSearchParams] = useState({});
   const {
     data: filteredTodos,
     error: filterError,
@@ -45,161 +50,192 @@ function App() {
     refetch,
   } = useSearchTodosQuery(searchParams);
 
-  useEffect(() => {
-    setInCompletedTasks(
+  const [dependentRoot, setDependentRoot] = useState<DependentTask[]>([]);
+  const [deleteConfirmation, setDeleteConfirmation] = useState(false);
+  const [completeAlert, setCompleteAlert] = useState(false);
+  const [updateTask, setUpdateTask] = useState(false);
+
+  // incomplete tasks
+  const inCompletedTasks = useMemo(
+    () =>
       filteredTodos?.tasks.filter(
         (task: any) =>
           task.status === "notDone" && task.dueDate >= new Date().toISOString()
-      )
-    );
-  }, [filteredTodos]);
+      ) || [],
+    [filteredTodos]
+  );
 
-  if (isFiltering) {
-    return <p>Loading...</p>;
-  }
-
-  if (filterError) {
-    return <p>Error: {JSON.stringify(filterError)}</p>;
-  }
-
-  const handleSubmit = async (data: FormData) => {
-    try {
-      setFormError(null);
-
-      const todoData = {
-        title: data.title,
-        status: "notDone",
-        priority: data.priority,
-        dueDate: data.dueDate,
-        isRecurring: data.isRecurrent,
-        recurrencePattern: data.recurrencePattern,
-        isDependency: data.isDependent,
-        dependencies:
-          data.isDependent && data.dependencies
+  const handleSubmit = useCallback(
+    async (data: FormData) => {
+      try {
+        const todoData = {
+          title: data.title,
+          status: "notDone",
+          priority: data.priority,
+          dueDate: data.dueDate,
+          isRecurring: data.isRecurrent,
+          recurrencePattern: data.isRecurrent
+            ? data.recurrencePattern
+            : undefined,
+          isDependency: data.isDependent,
+          dependencies: data.isDependent
             ? Array.isArray(data.dependencies)
               ? data.dependencies
               : [data.dependencies]
             : [],
-      };
-      if (todoData.isRecurring === false) delete todoData.recurrencePattern;
-      await createTodos(todoData).unwrap();
-      setSearchParams({});
-      refetch();
-    } catch (err: any) {
-      console.error("Failed to create task:", err);
-      setFormError(err.message || "Failed to create task. Please try again.");
-    }
-  };
+        };
 
-  const handleCancel = () => {
-    console.log("Form cancelled");
-  };
-
-  const deleteTaskConfirmation = async (task: FormData) => {
-    try {
-      setDependentRoot([]);
-      dispatch(setTaskToDelete(task));
-      setDeleteConfirmation(true);
-      const tasksWithDependency = filteredTodos.tasks
-        .filter((t: any) =>
-          t.dependencies.some((dep: any) => dep._id === task._id)
-        )
-        .map((t: any) => ({ _id: t._id, title: t.title }));
-      if (tasksWithDependency.length > 0) {
-        setDependentRoot(tasksWithDependency);
+        await createTodos(todoData).unwrap();
+        setSearchParams({});
+        refetch();
+      } catch (err: any) {
+        console.error("Failed to create task:", err);
       }
-    } catch (err: any) {
-      console.error("Failed to delete task:", err);
-    }
-  };
+    },
+    [createTodos, refetch]
+  );
 
-  const handleDelete = async () => {
+  const handleDelete = useCallback(async () => {
     try {
-      if (taskToDelete && taskToDelete._id) {
+      if (taskToDelete?._id) {
         await deleteTodos(taskToDelete._id).unwrap();
         dispatch(confirmDeleteTask());
-        refetch();
         setDeleteConfirmation(false);
+        refetch();
       }
-    } catch (err: any) {
-      setDeleteConfirmation(false);
+    } catch (err) {
       console.error("Failed to delete task:", err);
     }
-  };
+  }, [taskToDelete, deleteTodos, dispatch, refetch]);
 
-  const handleComplete = async (task: FormData) => {
-    try {
-      setCompleteAlert(false);
-      if (task.dependencies && task.dependencies.length > 0) {
-        const com = task.dependencies.every(
-          (dep: FormData) => dep.status === "done"
-        );
-        if (!com) {
+  const handleComplete = useCallback(
+    async (task: FormData) => {
+      try {
+        setCompleteAlert(false);
+        if (task.dependencies?.some((dep: FormData) => dep.status !== "done")) {
           setCompleteAlert(true);
           return;
         }
+        await updateStatusTodos({ id: task._id, status: "done" }).unwrap();
+        refetch();
+      } catch (err) {
+        console.error("Failed to update task status:", err);
       }
-      await updateStatusTodos({ id: task._id, status: "done" }).unwrap();
-      refetch();
-    } catch (err) {
-      console.error("Failed to update task status:", err);
-    }
-  };
-  const handleFilterApply = (filters: any) => {
-    setSearchParams(filters);
-  };
+    },
+    [updateStatusTodos, refetch]
+  );
 
-  if (isCreating) {
-    return <p>Creating...</p>;
-  }
+  const handleFilterApply = useCallback((filters: any) => {
+    setSearchParams(filters);
+  }, []);
+
+  const deleteTaskConfirmation = useCallback(
+    (task: FormData) => {
+      setDependentRoot([]);
+      dispatch(setTaskToDelete(task));
+      setDeleteConfirmation(true);
+
+      const tasksWithDependency =
+        filteredTodos?.tasks
+          .filter((t: any) =>
+            t.dependencies.some((dep: any) => dep._id === task._id)
+          )
+          .map((t: any) => ({ _id: t._id, title: t.title })) || [];
+
+      if (tasksWithDependency.length > 0) {
+        setDependentRoot(tasksWithDependency);
+      }
+    },
+    [filteredTodos, dispatch]
+  );
+  const updateTaskConfirmation = useCallback(
+    (task: FormData) => {
+      dispatch(setTaskToUpdate(task));
+      setUpdateTask(true);
+    },
+    [dispatch]
+  );
+
+  const handleUpdateTask = useCallback(
+    async (task: FormData) => {
+      try {
+        const todoData = {
+          title: task.title,
+          status: task.status,
+          priority: task.priority,
+          dueDate: task.dueDate,
+          isRecurring: task.isRecurrent,
+          recurrencePattern: task.isRecurrent
+            ? task.recurrencePattern
+            : undefined,
+          isDependency: task.isDependent,
+          dependencies: task.isDependent
+            ? Array.isArray(task.dependencies)
+              ? task.dependencies
+              : [task.dependencies]
+            : [],
+        };
+        setUpdateTask(false);
+        await updateTodos({ id: taskToUpdate._id, todoData }).unwrap();
+        dispatch(confirmUpdateTask());
+        refetch();
+      } catch (err) {
+        console.error("Failed to update task status:", err);
+      }
+    },
+    [updateTodos, dispatch, taskToUpdate, refetch]
+  );
+
+  if (isFiltering) return <p>Loading...</p>;
+  if (filterError) return <p>Error: {JSON.stringify(filterError)}</p>;
+
   return (
     <>
       <Header />
       <div className="flex flex-col lg:flex-row">
         <div className="w-full lg:w-2/3 p-4">
-          {formError && getNotificationMessage("error", formError)}
           {isCreated &&
             getNotificationMessage("success", "Task created successfully!")}
           {isDeleted &&
             getNotificationMessage("warning", "Task deleted successfully!")}
           {isStatusUpdate &&
             getNotificationMessage("success", "Task updated successfully!")}
+
           <div className="bg-white rounded-lg shadow-md border border-gray-200 p-0 m-0">
             <TaskForm
               onSubmit={handleSubmit}
-              onCancel={handleCancel}
               inCompleted={inCompletedTasks}
+              description="Task creation form"
+              title="Please fill details to create a new task"
             />
           </div>
         </div>
+
         <div className="w-full lg:w-1/3">
           <FilterComponent
             onFilterApply={handleFilterApply}
-            taskStats={{
-              totalTasks: filteredTodos && filteredTodos.stat.totalTasks,
-              completedTasks:
-                filteredTodos && filteredTodos.stat.completedTasks,
-              incompleteTasks:
-                filteredTodos && filteredTodos.stat.incompleteTasks,
-            }}
+            taskStats={filteredTodos?.stat}
           />
         </div>
       </div>
+
       <div className="border-t-6 border-gray-200 h-1 m-4"></div>
+
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-        {filteredTodos &&
-          filteredTodos.tasks.map((task: any) => (
-            <TaskCard
-              task={task}
-              key={task._id}
-              onDelete={deleteTaskConfirmation}
-              onComplete={handleComplete}
-            />
-          ))}
+        {filteredTodos?.tasks.map((task: any) => (
+          <TaskCard
+            task={task}
+            key={task._id}
+            onDelete={deleteTaskConfirmation}
+            onComplete={handleComplete}
+            onUpdate={updateTaskConfirmation}
+          />
+        ))}
       </div>
+
       {deleteConfirmation && (
         <ConfirmationModal
-          open={true}
+          open
           onCancel={() => {
             setDeleteConfirmation(false);
             dispatch(cancelDeleteTask());
@@ -212,20 +248,33 @@ function App() {
           dependentTasks={dependentRoot}
         />
       )}
+
       {completeAlert && (
         <ConfirmationModal
-          open={true}
+          open
           onCancel={() => setCompleteAlert(false)}
           onConfirm={() => setCompleteAlert(false)}
-          message={`Please complete all dependent tasks related to this task`}
+          message="Please complete all dependent tasks related to this task."
           title="Complete Task"
           option1="Okay"
           option2=""
           dependentTasks={[]}
         />
       )}
+      {updateTask && (
+        <TaskPopup
+          open
+          key={"1"}
+          onCancel={() => {
+            setUpdateTask(false);
+            dispatch(cancelUpdateTask());
+          }}
+          onSubmit={handleUpdateTask}
+          inCompleted={inCompletedTasks}
+        />
+      )}
     </>
   );
-}
+};
 
 export default App;

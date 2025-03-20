@@ -23,23 +23,21 @@ export const createTaskSchema = z
   })
   .strict();
 
-export const updateTaskSchema = z
-  .object({
-    title: z.string().min(1, validationMessages.titleRequired).optional(),
-    status: z.nativeEnum(TaskStatus).optional(),
-    priority: z.nativeEnum(TaskPriority).optional(),
-    dueDate: z
-      .string()
-      .optional()
-      .refine((date) => {
-        return !date || !isNaN(Date.parse(date));
-      }, validationMessages.invalidDate),
-    dependencies: z.array(z.string().regex(/^[0-9a-fA-F]{24}$/, 'Invalid ObjectId')).optional(),
-    isRecurring: z.boolean().optional(),
-    isDependency: z.boolean().optional(),
-    recurrencePattern: z.enum(['daily', 'weekly', 'monthly']).optional(),
-  })
-  .strict();
+export const updateTaskSchema = z.object({
+  title: z.string().min(1, validationMessages.titleRequired).optional(),
+  status: z.nativeEnum(TaskStatus).optional(),
+  priority: z.nativeEnum(TaskPriority).optional(),
+  dueDate: z
+    .string()
+    .optional()
+    .refine((date) => {
+      return !date || !isNaN(Date.parse(date));
+    }, validationMessages.invalidDate),
+
+  isRecurring: z.boolean().optional(),
+  isDependency: z.boolean().optional(),
+  recurrencePattern: z.nativeEnum(RecurrencePattern).optional(),
+});
 
 export const statusUpdate = z
   .object({

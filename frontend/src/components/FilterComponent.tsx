@@ -73,11 +73,11 @@ const FilterComponent: React.FC<FilterProps> = ({
         medium: false,
         high: false,
       },
-    })
+    });
   };
 
   return (
-    <div className="bg-white rounded-lg shadow-md border border-gray-200 m-4 h-fit">
+    <div className="bg-white rounded-lg shadow-md border border-gray-200 m-4 sm:h-fit lg:h-100 ">
       <div className="p-4">
         <h3 className="text-lg font-semibold text-gray-700 mb-3">
           Task Statistics
