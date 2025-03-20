@@ -74,16 +74,16 @@ const TaskForm: React.FC<TaskFormProps> = ({
 
   return (
     <form
-      className="max-w-7xl mx-auto border-b border-gray-900/10 pb-12"
+      className="max-w-7xl mx-auto border-b border-gray-900/10 pb-12 p-4 my-auto"
       onSubmit={handleSubmit(handleFormSubmit)}
     >
       <div className="space-y-12">
         <div>
           <h2 className="text-xl sm:text-2xl font-semibold text-gray-900">
-            Todo creation form
+            Task creation form
           </h2>
           <p className="mt-1 text-sm text-gray-600">
-            Please fill details to create a new todo
+            Please fill details to create a new task
           </p>
 
           <div className="mt-10 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">

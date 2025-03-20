@@ -55,7 +55,7 @@ const TaskCard: React.FC<TaskCardProps> = ({
   };
   const completedBackground = (status: string) => {
     switch (status.toLowerCase()) {
-      case "not done":
+      case "notDone":
         return "bg-[#f7f7f7]";
       case "done":
         return "bg-[#f1fff1]";

@@ -9,10 +9,6 @@ export const todoApi = createApi({
   // refetchOnFocus: true, // refetch data when window regains focus
   // keepUnusedDataFor: 10, // clear cache after 10 seconds
   endpoints: (builder) => ({
-    getTodos: builder.query({
-      query: () => "/tasks",
-      providesTags: ["Todo"],
-    }),
     createTodos: builder.mutation({
       query: (body) => ({
         url: "/tasks",
@@ -46,13 +42,20 @@ export const todoApi = createApi({
       }),
       invalidatesTags: ["Todo"],
     }),
+    searchTodos: builder.query({
+      query: (params) => {
+        const queryParams = new URLSearchParams(params).toString();
+        return `/tasks/search?${queryParams}`;
+      },
+      providesTags: ["Todo"],
+    }),
   }),
 });
 
 export const {
-  useGetTodosQuery,
   useCreateTodosMutation,
   useUpdateTodosMutation,
   useDeleteTodosMutation,
-  useUpdateStatusTodosMutation
+  useUpdateStatusTodosMutation,
+  useSearchTodosQuery,
 } = todoApi;

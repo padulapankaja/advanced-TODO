@@ -9,14 +9,16 @@ import { useEffect, useState } from "react";
 import { Header } from "./components/index";
 import TaskForm from "./components/Form";
 import {
-  useGetTodosQuery,
   useCreateTodosMutation,
   useDeleteTodosMutation,
   useUpdateStatusTodosMutation,
+  useSearchTodosQuery,
 } from "./services/todoService";
 import TaskCard from "./components/Card";
 import ConfirmationModal from "./components/ConfirmationModel";
 import { FormData } from "./types/todoTypes";
+import FilterComponent from "./components/FilterComponent";
+import { getNotificationMessage } from "./utils";
 type dependentTask = {
   _id: string;
   title: string;
@@ -24,7 +26,7 @@ type dependentTask = {
 function App() {
   const dispatch = useDispatch();
   const taskToDelete = useSelector((state: any) => state.todos?.taskToDelete);
-  const { data: todos, error, isLoading, refetch } = useGetTodosQuery({});
+  // const { data: todos, error, isLoading } = useGetTodosQuery({});
   const [createTodos, { isLoading: isCreating, isSuccess: isCreated }] =
     useCreateTodosMutation();
   const [deleteTodos, { isSuccess: isDeleted }] = useDeleteTodosMutation();
@@ -35,21 +37,29 @@ function App() {
   const [deleteConfirmation, setDeleteConfirmation] = useState<boolean>(false);
   const [dependentRoot, setDependentRoot] = useState<dependentTask[]>();
   const [completeAlert, setCompleteAlert] = useState<boolean>(false);
+  const [searchParams, setSearchParams] = useState<any>({});
+  const {
+    data: filteredTodos,
+    error: filterError,
+    isLoading: isFiltering,
+    refetch,
+  } = useSearchTodosQuery(searchParams);
+
   useEffect(() => {
     setInCompletedTasks(
-      todos?.filter(
+      filteredTodos?.tasks.filter(
         (task: any) =>
-          task.status === "not done" && task.dueDate >= new Date().toISOString()
+          task.status === "notDone" && task.dueDate >= new Date().toISOString()
       )
     );
-  }, [todos]);
+  }, [filteredTodos]);
 
-  if (isLoading) {
+  if (isFiltering) {
     return <p>Loading...</p>;
   }
 
-  if (error) {
-    return <p>Error: {JSON.stringify(error)}</p>;
+  if (filterError) {
+    return <p>Error: {JSON.stringify(filterError)}</p>;
   }
 
   const handleSubmit = async (data: FormData) => {
@@ -58,7 +68,7 @@ function App() {
 
       const todoData = {
         title: data.title,
-        status: "not done",
+        status: "notDone",
         priority: data.priority,
         dueDate: data.dueDate,
         isRecurring: data.isRecurrent,
@@ -73,6 +83,7 @@ function App() {
       };
       if (todoData.isRecurring === false) delete todoData.recurrencePattern;
       await createTodos(todoData).unwrap();
+      setSearchParams({});
       refetch();
     } catch (err: any) {
       console.error("Failed to create task:", err);
@@ -89,7 +100,7 @@ function App() {
       setDependentRoot([]);
       dispatch(setTaskToDelete(task));
       setDeleteConfirmation(true);
-      const tasksWithDependency = todos
+      const tasksWithDependency = filteredTodos.tasks
         .filter((t: any) =>
           t.dependencies.some((dep: any) => dep._id === task._id)
         )
@@ -134,6 +145,9 @@ function App() {
       console.error("Failed to update task status:", err);
     }
   };
+  const handleFilterApply = (filters: any) => {
+    setSearchParams(filters);
+  };
 
   if (isCreating) {
     return <p>Creating...</p>;
@@ -141,43 +155,47 @@ function App() {
   return (
     <>
       <Header />
-
-      <div className="p-4 sm:p-6">
-        {formError && (
-          <div className="mb-4 p-3 bg-red-50 text-red-600 rounded-md">
-            {formError}
+      <div className="flex flex-col lg:flex-row">
+        <div className="w-full lg:w-2/3 p-4">
+          {formError && getNotificationMessage("error", formError)}
+          {isCreated &&
+            getNotificationMessage("success", "Task created successfully!")}
+          {isDeleted &&
+            getNotificationMessage("warning", "Task deleted successfully!")}
+          {isStatusUpdate &&
+            getNotificationMessage("success", "Task updated successfully!")}
+          <div className="bg-white rounded-lg shadow-md border border-gray-200 p-0 m-0">
+            <TaskForm
+              onSubmit={handleSubmit}
+              onCancel={handleCancel}
+              inCompleted={inCompletedTasks}
+            />
           </div>
-        )}
-        {isCreated && (
-          <div className="mb-4 p-3 bg-green-200 text-green-900 rounded-md">
-            Task created successfully!
-          </div>
-        )}
-        {isDeleted && (
-          <div className="mb-4 p-3 bg-yellow-200 text-yellow-900 rounded-md">
-            Task deleted successfully!
-          </div>
-        )}
-        {isStatusUpdate && (
-          <div className="mb-4 p-3 bg-green-200 text-green-900 rounded-md">
-            Task updated successfully!
-          </div>
-        )}
-        <TaskForm
-          onSubmit={handleSubmit}
-          onCancel={handleCancel}
-          inCompleted={inCompletedTasks}
-        />
-      </div>
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-        {todos?.map((task: any) => (
-          <TaskCard
-            task={task}
-            key={task._id}
-            onDelete={deleteTaskConfirmation}
-            onComplete={handleComplete}
+        </div>
+        <div className="w-full lg:w-1/3">
+          <FilterComponent
+            onFilterApply={handleFilterApply}
+            taskStats={{
+              totalTasks: filteredTodos && filteredTodos.stat.totalTasks,
+              completedTasks:
+                filteredTodos && filteredTodos.stat.completedTasks,
+              incompleteTasks:
+                filteredTodos && filteredTodos.stat.incompleteTasks,
+            }}
           />
-        ))}
+        </div>
+      </div>
+      <div className="border-t-6 border-gray-200 h-1 m-4"></div>
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        {filteredTodos &&
+          filteredTodos.tasks.map((task: any) => (
+            <TaskCard
+              task={task}
+              key={task._id}
+              onDelete={deleteTaskConfirmation}
+              onComplete={handleComplete}
+            />
+          ))}
       </div>
       {deleteConfirmation && (
         <ConfirmationModal

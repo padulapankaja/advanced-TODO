@@ -43,18 +43,47 @@ export const searchTasks = async (req: Request, res: Response, next: NextFunctio
   try {
     const { title, status, priority, isRecurring, dueDate, isDependency } = req.query;
 
-    const filter: any = {
-      ...(title && { title: { $regex: new RegExp(title as string, 'i') } }),
-      ...(status && { status }),
-      ...(priority && { priority }),
-      ...(isRecurring !== undefined && { isRecurring: isRecurring === 'true' }),
-      ...(isDependency !== undefined && { isDependency: isDependency === 'true' }),
-      ...(dueDate && { dueDate: { $gte: new Date(dueDate as string) } }),
-    };
+    const filter: any = {};
 
-    // Fetch tasks based on the filters
-    const tasks = await Task.find(filter);
-    res.status(StatusCodes.OK).json(tasks);
+    // add conditions that
+    if (title) filter.title = { $regex: new RegExp(String(title), 'i') };
+    if (status) filter.status = { $in: String(status).split(',') };
+    if (priority) filter.priority = { $in: String(priority).split(',') };
+    if (isRecurring !== undefined) filter.isRecurring = isRecurring === 'true';
+    if (isDependency !== undefined) filter.isDependency = isDependency === 'true';
+    if (dueDate) filter.dueDate = { $gte: new Date(String(dueDate)) };
+
+    const [tasks, stats] = await Promise.all([
+      Object.keys(req.query).length > 0
+        ? Task.find(filter).populate('dependencies')
+        : Task.find().populate('dependencies'),
+
+      // Use MongoDB aggregation for statistics
+      Task.aggregate([
+        {
+          $group: {
+            _id: null,
+            totalTasks: { $sum: 1 },
+            completedTasks: {
+              $sum: { $cond: [{ $eq: ['$status', 'done'] }, 1, 0] },
+            },
+            incompleteTasks: {
+              $sum: { $cond: [{ $eq: ['$status', 'notDone'] }, 1, 0] },
+            },
+          },
+        },
+      ]),
+    ]);
+
+    // Extract statistics from aggregation result (or provide defaults)
+    const taskStats = stats[0] || { totalTasks: 0, completedTasks: 0, incompleteTasks: 0 };
+
+    delete taskStats._id;
+
+    res.status(StatusCodes.OK).json({
+      tasks,
+      stat: taskStats,
+    });
   } catch (error) {
     next(error);
   }

@@ -1,6 +1,6 @@
 export const validationMessages = {
   titleRequired: 'Title is required',
-  invalidStatus: "Invalid status. Allowed values: 'done', 'not done'",
+  invalidStatus: "Invalid status. Allowed values: 'done', 'notDone'",
   invalidPriority: "Invalid priority. Allowed values: 'low', 'medium', 'high'",
   invalidDate: 'Invalid date format',
   invalidObjectId: 'Invalid ObjectId format',
