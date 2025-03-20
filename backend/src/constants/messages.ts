@@ -7,4 +7,5 @@ export const validationMessages = {
   invalidTaskId: 'Invalid Task ID',
   taskNotFound: 'Task not found',
   taskDeleted: 'Task deleted successfully',
+  taskDependentCom: 'Please complete all dependent tasks related to this task',
 };

@@ -110,10 +110,55 @@ export const deleteTask = async (req: Request, res: Response, next: NextFunction
       return;
     }
 
+    // check dependent tasks
+    await Task.updateMany(
+      { dependencies: req.params.id },
+      { $pull: { dependencies: req.params.id } },
+    );
+
     res.status(StatusCodes.OK).json({
       status: StatusCodes.OK,
       message: validationMessages.taskDeleted,
     });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const updateStatus = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    // Validate ObjectId
+    if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
+      res.status(StatusCodes.BAD_REQUEST).json({
+        status: StatusCodes.BAD_REQUEST,
+        message: validationMessages.invalidTaskId,
+      });
+      return;
+    }
+
+    const checkTask = await Task.findById(req.params.id).populate('dependencies');
+    if (checkTask) {
+      if (req.body.status === 'done') {
+        const com = checkTask.dependencies?.every((dep: any) => dep.status === 'done');
+        if (!com) {
+          res.status(StatusCodes.BAD_REQUEST).json({
+            status: StatusCodes.BAD_REQUEST,
+            message: validationMessages.taskDependentCom,
+          });
+          return;
+        }
+      }
+    }
+    const update = await checkTask?.updateOne({ status: req.body.status });
+    if (!update) {
+      res.status(StatusCodes.NOT_FOUND).json({
+        status: StatusCodes.NOT_FOUND,
+        message: validationMessages.taskNotFound,
+      });
+      return;
+    }
+
+    res.status(StatusCodes.OK).json(update);
   } catch (error) {
     next(error);
   }

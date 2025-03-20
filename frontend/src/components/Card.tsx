@@ -1,22 +1,13 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import React from "react";
-
-type FormData = {
-  title: string;
-  priority: string;
-  dueDate: string;
-  isRecurring: boolean;
-  isDependency: boolean;
-  recurrencePattern?: string;
-  dependencies?: object[];
-  status: string;
-};
+import { FormData } from "../types/todoTypes";
 
 interface TaskCardProps {
   task: FormData;
   onComplete?: (task: FormData) => void;
   onDelete?: (task: FormData) => void;
   onUpdate?: (task: FormData) => void;
+  onReopen?: (task: FormData) => void;
 }
 
 const TaskCard: React.FC<TaskCardProps> = ({
@@ -24,6 +15,7 @@ const TaskCard: React.FC<TaskCardProps> = ({
   onComplete,
   onDelete,
   onUpdate,
+  onReopen,
 }) => {
   const {
     title,
@@ -95,6 +87,11 @@ const TaskCard: React.FC<TaskCardProps> = ({
   const handleUpdate = () => {
     if (onUpdate) {
       onUpdate(task);
+    }
+  };
+  const handleReopen = () => {
+    if (onReopen) {
+      onReopen(task);
     }
   };
 
@@ -245,6 +242,28 @@ const TaskCard: React.FC<TaskCardProps> = ({
             </svg>
             Delete
           </button>
+          {status === "done" && (
+            <button
+              onClick={handleReopen}
+              className="flex items-center px-2 py-1 text-xs font-medium text-white bg-blue-800 rounded-md hover:bg-blue-600 transition-colors"
+            >
+              <svg
+                className="h-4 w-4 mr-1"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth="2"
+                  d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
+                ></path>
+              </svg>
+              Reopen
+            </button>
+          )}
           {status !== "done" && (
             <>
               <button

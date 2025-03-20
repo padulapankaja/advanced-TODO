@@ -6,5 +6,10 @@ export type FormData = {
   isRecurrent: boolean;
   isDependent: boolean;
   recurrencePattern?: string;
-  dependencies?: string;
+  dependencies?: FormData[];
+  isRecurring?: boolean;
+  isDependency?: boolean;
+  status: string;
+  createdAt?: string;
+  updatedAt?: string;
 };

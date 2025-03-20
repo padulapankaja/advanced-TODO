@@ -26,8 +26,8 @@ export const createTaskSchema = z
 export const updateTaskSchema = z
   .object({
     title: z.string().min(1, validationMessages.titleRequired).optional(),
-    status: z.enum(['done', 'not done']).optional(),
-    priority: z.enum(['low', 'medium', 'high']).optional(),
+    status: z.nativeEnum(TaskStatus).optional(),
+    priority: z.nativeEnum(TaskPriority).optional(),
     dueDate: z
       .string()
       .optional()
@@ -38,5 +38,11 @@ export const updateTaskSchema = z
     isRecurring: z.boolean().optional(),
     isDependency: z.boolean().optional(),
     recurrencePattern: z.enum(['daily', 'weekly', 'monthly']).optional(),
+  })
+  .strict();
+
+export const statusUpdate = z
+  .object({
+    status: z.nativeEnum(TaskStatus),
   })
   .strict();

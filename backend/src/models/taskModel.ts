@@ -10,6 +10,7 @@ export interface ITask extends Document {
   isRecurring: boolean;
   isDependency: boolean;
   recurrencePattern?: RecurrencePattern;
+  cronCreated?: boolean;
 }
 
 const TaskSchema = new Schema<ITask>(
@@ -22,6 +23,7 @@ const TaskSchema = new Schema<ITask>(
     isRecurring: { type: Boolean, default: false },
     isDependency: { type: Boolean, default: false },
     recurrencePattern: { type: String, enum: Object.values(RecurrencePattern) },
+    cronCreated: { type: Boolean, default: false },
   },
   { timestamps: true },
 );
