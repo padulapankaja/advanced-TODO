@@ -1,6 +1,6 @@
 export enum TaskStatus {
   DONE = 'done',
-  NOT_DONE = 'not done',
+  NOT_DONE = 'notDone',
 }
 
 export enum TaskPriority {

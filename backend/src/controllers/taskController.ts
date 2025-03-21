@@ -14,7 +14,7 @@ export const createTask = async (req: Request, res: Response, next: NextFunction
 
 export const getTasks = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const tasks = await Task.find();
+    const tasks = await Task.find().populate('dependencies');
     res.json(tasks);
   } catch (error) {
     next(error);
@@ -41,19 +41,49 @@ export const getTask = async (req: Request, res: Response, next: NextFunction) =
 
 export const searchTasks = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const { title, status, priority, isRecurring, dueDate } = req.query;
+    const { title, status, priority, isRecurring, dueDate, isDependency } = req.query;
 
-    const filter: any = {
-      ...(title && { title: { $regex: new RegExp(title as string, 'i') } }),
-      ...(status && { status }),
-      ...(priority && { priority }),
-      ...(isRecurring !== undefined && { isRecurring: isRecurring === 'true' }),
-      ...(dueDate && { dueDate: { $gte: new Date(dueDate as string) } }),
-    };
+    const filter: any = {};
 
-    // Fetch tasks based on the filters
-    const tasks = await Task.find(filter);
-    res.status(StatusCodes.OK).json(tasks);
+    // add conditions that
+    if (title) filter.title = { $regex: new RegExp(String(title), 'i') };
+    if (status) filter.status = { $in: String(status).split(',') };
+    if (priority) filter.priority = { $in: String(priority).split(',') };
+    if (isRecurring !== undefined) filter.isRecurring = isRecurring === 'true';
+    if (isDependency !== undefined) filter.isDependency = isDependency === 'true';
+    if (dueDate) filter.dueDate = { $gte: new Date(String(dueDate)) };
+
+    const [tasks, stats] = await Promise.all([
+      Object.keys(req.query).length > 0
+        ? Task.find(filter).sort({ updatedAt: -1 }).populate('dependencies')
+        : Task.find().sort({ updatedAt: -1 }).populate('dependencies'),
+
+      // Use MongoDB aggregation for statistics
+      Task.aggregate([
+        {
+          $group: {
+            _id: null,
+            totalTasks: { $sum: 1 },
+            completedTasks: {
+              $sum: { $cond: [{ $eq: ['$status', 'done'] }, 1, 0] },
+            },
+            incompleteTasks: {
+              $sum: { $cond: [{ $eq: ['$status', 'notDone'] }, 1, 0] },
+            },
+          },
+        },
+      ]),
+    ]);
+
+    // Extract statistics from aggregation result (or provide defaults)
+    const taskStats = stats[0] || { totalTasks: 0, completedTasks: 0, incompleteTasks: 0 };
+
+    delete taskStats._id;
+
+    res.status(StatusCodes.OK).json({
+      tasks,
+      stat: taskStats,
+    });
   } catch (error) {
     next(error);
   }
@@ -70,9 +100,9 @@ export const updateTask = async (req: Request, res: Response, next: NextFunction
       return;
     }
 
-    const updatedTask = await Task.findByIdAndUpdate(req.params.id, req.body, {
-      new: true, // Return the updated document
-      runValidators: true, // Apply schema validation
+    const updatedTask = await Task.findByIdAndUpdate(req.params.id, req.body.todoData, {
+      new: true,
+      runValidators: true,
     });
 
     if (!updatedTask) {
@@ -109,10 +139,55 @@ export const deleteTask = async (req: Request, res: Response, next: NextFunction
       return;
     }
 
+    // check dependent tasks
+    await Task.updateMany(
+      { dependencies: req.params.id },
+      { $pull: { dependencies: req.params.id } },
+    );
+
     res.status(StatusCodes.OK).json({
       status: StatusCodes.OK,
       message: validationMessages.taskDeleted,
     });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const updateStatus = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    // Validate ObjectId
+    if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
+      res.status(StatusCodes.BAD_REQUEST).json({
+        status: StatusCodes.BAD_REQUEST,
+        message: validationMessages.invalidTaskId,
+      });
+      return;
+    }
+
+    const checkTask = await Task.findById(req.params.id).populate('dependencies');
+    if (checkTask) {
+      if (req.body.status === 'done') {
+        const com = checkTask.dependencies?.every((dep: any) => dep.status === 'done');
+        if (!com) {
+          res.status(StatusCodes.BAD_REQUEST).json({
+            status: StatusCodes.BAD_REQUEST,
+            message: validationMessages.taskDependentCom,
+          });
+          return;
+        }
+      }
+    }
+    const update = await checkTask?.updateOne({ status: req.body.status });
+    if (!update) {
+      res.status(StatusCodes.NOT_FOUND).json({
+        status: StatusCodes.NOT_FOUND,
+        message: validationMessages.taskNotFound,
+      });
+      return;
+    }
+
+    res.status(StatusCodes.OK).json(update);
   } catch (error) {
     next(error);
   }
