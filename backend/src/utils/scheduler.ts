@@ -4,7 +4,7 @@ import { Task } from '../models/taskModel';
 const getCurrentTime = () => new Date().toLocaleTimeString();
 
 // For testing, you can run more frequently: '* * * * *' (every minute)
-cron.schedule('* * * * *', async () => {
+cron.schedule('0 0 * * *', async () => {
   console.log(`[${getCurrentTime()}] Running daily recurring task check...`);
   try {
     const now = new Date();
