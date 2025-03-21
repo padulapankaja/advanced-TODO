@@ -2,7 +2,7 @@ name: Backend CICD
 on:
   push:
     branches:
-      - featured/dev-ops-full
+      - develop
     paths:
       - 'backend/**'
       - '.github/workflows/backend-deploy.yml'
