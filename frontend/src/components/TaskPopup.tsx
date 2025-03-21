@@ -28,7 +28,7 @@ export default function TaskPopup({
   console.log("taskToUpdate", taskToUpdate);
 
   return (
-    <Dialog open={open} onClose={onCancel} className="relative z-10">
+    <Dialog open={open} onClose={onCancel ?? (() => {})}  className="relative z-10">
       <div className="fixed inset-0 bg-gray-500/75" />
 
       <div className="fixed inset-0 z-10 w-screen overflow-y-auto">
