@@ -29,6 +29,7 @@ type DependentTask = {
   _id: string;
   title: string;
 };
+const today = new Date().toISOString().split("T")[0];
 
 const App = () => {
   const dispatch = useDispatch();
@@ -60,7 +61,7 @@ const App = () => {
     () =>
       filteredTodos?.tasks.filter(
         (task: any) =>
-          task.status === "notDone" && task.dueDate >= new Date().toISOString()
+          task.status === "notDone" && task.dueDate.split("T")[0] >= today
       ) || [],
     [filteredTodos]
   );

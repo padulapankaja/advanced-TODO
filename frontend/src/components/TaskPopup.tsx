@@ -17,13 +17,15 @@ export default function TaskPopup({
   inCompleted,
   onSubmit,
 }: ConfirmationModalProps) {
-  const taskToDelete = useSelector((state: any) => state.todos?.taskToUpdate);
+  const taskToUpdate = useSelector((state: any) => state.todos?.taskToUpdate);
 
   const handleUpdate = (data: FormData) => {
     if (onSubmit) {
       onSubmit(data);
     }
   };
+  console.log("inCompleted", inCompleted);
+  console.log("taskToUpdate", taskToUpdate);
 
   return (
     <Dialog open={open} onClose={onCancel} className="relative z-10">
@@ -35,10 +37,12 @@ export default function TaskPopup({
             <div className="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4 w-5xl">
               <div className="sm:flex sm:items-start">
                 <TaskForm
-                  data={taskToDelete}
+                  data={taskToUpdate}
                   onCancel={onCancel}
                   onSubmit={handleUpdate}
-                  inCompleted={inCompleted}
+                  inCompleted={inCompleted.filter(
+                    (task) => task._id !== taskToUpdate._id
+                  )}
                   title="Update task"
                   description="Update the task details"
                 />

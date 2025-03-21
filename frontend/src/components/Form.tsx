@@ -44,18 +44,12 @@ const TaskForm: React.FC<TaskFormProps> = ({
       priority: data?.priority || "low",
       isRecurrent: data?.isRecurring || false,
       isDependent: data?.isDependency || false,
-      recurrencePattern: data?.recurrencePattern || "",
-      dependencies: data?.dependencies
-        ? Array.isArray(data.dependencies)
-          ? data.dependencies
-          : [data.dependencies]
-        : [],
+      recurrencePattern: data?.recurrencePattern || "daily",
     },
   });
 
   const isRecurrent = watch("isRecurrent");
   const isDependent = watch("isDependent");
-
   const handleRecurrent = (e: React.ChangeEvent<HTMLInputElement>) => {
     const checked = e.target.checked;
     setValue("isRecurrent", checked);
@@ -146,27 +140,28 @@ const TaskForm: React.FC<TaskFormProps> = ({
               )}
             </ToggleSwitch>
 
-            <ToggleSwitch
-              id="isDependent"
-              label="Is there dependent task?"
-              isChecked={isDependent}
-              register={register}
-              onChange={handleDependent}
-            >
-              {isDependent && (
-                <Select
-                  id="dependencies"
-                  register={register}
-                  isDefault
-                  options={inCompleted.map((task) => {
-                    return {
-                      value: task._id?.toString() || "",
-                      label: task.title,
-                    };
-                  })}
-                />
-              )}
-            </ToggleSwitch>
+            {inCompleted && inCompleted.length > 0 && (
+              <ToggleSwitch
+                id="isDependent"
+                label="Is there dependent task?"
+                isChecked={isDependent}
+                register={register}
+                onChange={handleDependent}
+              >
+                {isDependent && (
+                  <Select
+                    id="dependencies"
+                    register={register}
+                    options={inCompleted.map((task) => {
+                      return {
+                        value: task._id?.toString() || "",
+                        label: task.title,
+                      };
+                    })}
+                  />
+                )}
+              </ToggleSwitch>
+            )}
           </div>
         </div>
 

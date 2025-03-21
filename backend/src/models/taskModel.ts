@@ -2,6 +2,7 @@ import mongoose, { Schema, Document } from 'mongoose';
 import { TaskStatus, TaskPriority, RecurrencePattern } from '../constants/taskEnums';
 
 export interface ITask extends Document {
+  _id?: mongoose.Types.ObjectId;
   title: string;
   status: TaskStatus;
   priority: TaskPriority;

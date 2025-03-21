@@ -7,8 +7,6 @@ interface SelectProps {
   id: string;
   register: UseFormRegister<FormData>;
   options: { value: string; label: string }[];
-  defaultValue?: { value: string; label: string };
-  isDefault?: boolean;
 }
 
 export const Select: React.FC<SelectProps> = ({

@@ -36,7 +36,7 @@ export const todoApi = createApi({
     }),
     updateStatusTodos: builder.mutation({
       query: ({ id, ...body }) => ({
-        url: `/tasks/${id}`,
+        url: `/tasks/status/${id}`,
         method: "PATCH",
         body,
       }),

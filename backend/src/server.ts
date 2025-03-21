@@ -1,6 +1,6 @@
 import app from './app';
 import dotenv from 'dotenv';
-
+import './utils/scheduler';
 dotenv.config();
 
 const PORT = process.env.PORT || 5000;
