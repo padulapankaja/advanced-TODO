@@ -6,7 +6,7 @@ import {
   searchTasks,
   deleteTask,
   updateTask,
-  updateStatus
+  updateStatus,
 } from '../../controllers/taskController';
 import { validateRequest } from '../../middlewares/validateRequest';
 import { createTaskSchema, updateTaskSchema } from '../../validations/validations';
