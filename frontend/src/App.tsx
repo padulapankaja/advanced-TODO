@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { useDispatch, useSelector } from "react-redux";
-import { useState, useCallback, useMemo } from "react";
+import { useState, useCallback, useMemo, useEffect } from "react";
 import {
   setTaskToDelete,
   cancelDeleteTask,
@@ -29,6 +29,10 @@ type DependentTask = {
   _id: string;
   title: string;
 };
+type Notification = {
+  type: "error" | "success" | "warning"
+  message: string;
+};
 const today = new Date().toISOString().split("T")[0];
 
 const App = () => {
@@ -56,6 +60,9 @@ const App = () => {
   const [completeAlert, setCompleteAlert] = useState(false);
   const [updateTask, setUpdateTask] = useState(false);
 
+  const [notification, setNotification] = useState<Notification>();
+
+  
   // incomplete tasks
   const inCompletedTasks = useMemo(
     () =>
@@ -65,6 +72,20 @@ const App = () => {
       ) || [],
     [filteredTodos]
   );
+
+  // Function to trigger notification and clear it after 2 seconds
+const triggerNotification = (type: "error" | "success" | "warning", message: string) => {
+  setNotification({ type, message });
+  setTimeout(() => {
+    setNotification(undefined);
+  }, 2000);
+};
+
+useEffect(() => {
+  if (isCreated) triggerNotification("success", "Task created successfully!");
+  if (isDeleted) triggerNotification("warning", "Task deleted successfully!");
+  if (isStatusUpdate) triggerNotification("success", "Task updated successfully!");
+}, [isCreated, isDeleted, isStatusUpdate]);
 
   const handleSubmit = useCallback(
     async (data: FormData) => {
@@ -195,13 +216,7 @@ const App = () => {
       <Header />
       <div className="flex flex-col lg:flex-row">
         <div className="w-full lg:w-2/3 p-4">
-          {isCreated &&
-            getNotificationMessage("success", "Task created successfully!")}
-          {isDeleted &&
-            getNotificationMessage("warning", "Task deleted successfully!")}
-          {isStatusUpdate &&
-            getNotificationMessage("success", "Task updated successfully!")}
-
+          {notification && getNotificationMessage(notification.type, notification.message)}
           <div className="bg-white rounded-lg shadow-md border border-gray-200 p-0 m-0">
             <TaskForm
               onSubmit={handleSubmit}
