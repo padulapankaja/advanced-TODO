@@ -1,11 +1,11 @@
-import { Request, Response, NextFunction } from 'express';
+import { Response } from 'express';
 import { StatusCodes, ReasonPhrases } from 'http-status-codes';
 import mongoose from 'mongoose';
 
-export const errorHandler = (err: any, req: Request, res: Response, next: NextFunction) => {
+export const errorHandler = (err: any, res: Response) => {
   // Check if the error is a mongoose validation error
   if (err instanceof mongoose.Error.ValidationError) {
-     res.status(StatusCodes.BAD_REQUEST).json({
+    res.status(StatusCodes.BAD_REQUEST).json({
       status: StatusCodes.BAD_REQUEST,
       message: ReasonPhrases.BAD_REQUEST,
       errors: err.errors,
@@ -17,7 +17,7 @@ export const errorHandler = (err: any, req: Request, res: Response, next: NextFu
   const statusCode = err.statusCode || StatusCodes.INTERNAL_SERVER_ERROR; // Default to 500 if no specific status code is set
   const message = err.message || ReasonPhrases.INTERNAL_SERVER_ERROR; // Fallback to default message
 
-   res.status(statusCode).json({
+  res.status(statusCode).json({
     status: statusCode,
     message: message,
   });
