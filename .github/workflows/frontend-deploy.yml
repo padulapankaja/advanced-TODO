@@ -2,7 +2,7 @@ name: Frontend CICD - Deploy to S3
 on:
   push:
     branches:
-      - featured/dev-ops-full
+      - develop
     paths:
       - 'frontend/**'
       - '.github/workflows/frontend-deploy.yml'
