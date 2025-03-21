@@ -1,8 +1,8 @@
 import mongoose, { Schema, Document } from 'mongoose';
 import { TaskStatus, TaskPriority, RecurrencePattern } from '../constants/taskEnums';
 
-export interface ITask extends Document {
-  _id?: mongoose.Types.ObjectId;
+// Base interface without Document extension
+export interface ITaskBase {
   title: string;
   status: TaskStatus;
   priority: TaskPriority;
@@ -13,6 +13,12 @@ export interface ITask extends Document {
   recurrencePattern?: RecurrencePattern;
   cronCreated?: boolean;
 }
+
+// Document interface that extends Mongoose Document
+export interface ITask extends Document, ITaskBase {}
+
+// For when you need to represent a task that might not be saved yet
+export type ITaskInput = Omit<ITaskBase, '_id'>;
 
 const TaskSchema = new Schema<ITask>(
   {
