@@ -1,5 +1,5 @@
 import cron from 'node-cron';
-import { Task } from '../models/taskModel';
+import { Task, ITaskBase } from '../models/taskModel';
 
 const getCurrentTime = () => new Date().toLocaleTimeString();
 
@@ -15,7 +15,7 @@ cron.schedule('0 0 * * *', async () => {
     tomorrow.setDate(tomorrow.getDate() + 1);
 
     // Find all recurring tasks not due today or in the past
-    const recurringTasks: any = await Task.find({
+    const recurringTasks: ITaskBase[] = await Task.find({
       isRecurring: true,
       dueDate: { $gte: tomorrow },
     });
@@ -23,6 +23,10 @@ cron.schedule('0 0 * * *', async () => {
     console.log(`[${getCurrentTime()}] Found ${recurringTasks.length} recurring tasks to process.`);
 
     for (const task of recurringTasks) {
+      if (!task.dueDate) {
+        console.warn(`[${getCurrentTime()}] Task "${task.title}" has no due date, skipping.`);
+        continue;
+      }
       const taskDueDate = new Date(task.dueDate);
       const taskDueDateStart = new Date(taskDueDate);
       taskDueDateStart.setHours(0, 0, 0, 0); // Reset to start of the day for date comparison
@@ -38,10 +42,14 @@ cron.schedule('0 0 * * *', async () => {
       console.log(`[${getCurrentTime()}] Processing task: ${task.title}, Due: ${taskDueDate}`);
 
       // For tasks due today or in the past, check if next instance already exists
-      const taskPattern = task.recurrencePattern.toLowerCase();
+      const taskPattern = task.recurrencePattern?.toLowerCase();
 
       // Calculate the next due date based on the recurrence pattern
       const nextDueDate = calculateNextDueDate(taskDueDate, taskPattern);
+      if (!nextDueDate) {
+        console.warn(`[${getCurrentTime()}] No next due date calculated for task: ${task.title}`);
+        continue;
+      }
       const nextDueDateStart = new Date(nextDueDate);
       nextDueDateStart.setHours(0, 0, 0, 0); // Reset to start of the day for date comparison
 
@@ -95,23 +103,26 @@ cron.schedule('0 0 * * *', async () => {
 });
 
 //Calculate the next due date based on the recurrence pattern
-function calculateNextDueDate(currentDueDate: Date, recurrencePattern: string) {
+function calculateNextDueDate(currentDueDate: Date, recurrencePattern?: string) {
   const nextDueDate = new Date(currentDueDate);
+  if (recurrencePattern === undefined) {
+    return;
+  } else {
+    switch (recurrencePattern.toLowerCase()) {
+      case 'daily':
+        nextDueDate.setDate(nextDueDate.getDate() + 1);
+        break;
+      case 'weekly':
+        nextDueDate.setDate(nextDueDate.getDate() + 7);
+        break;
+      case 'monthly':
+        nextDueDate.setMonth(nextDueDate.getMonth() + 1);
+        break;
 
-  switch (recurrencePattern.toLowerCase()) {
-    case 'daily':
-      nextDueDate.setDate(nextDueDate.getDate() + 1);
-      break;
-    case 'weekly':
-      nextDueDate.setDate(nextDueDate.getDate() + 7);
-      break;
-    case 'monthly':
-      nextDueDate.setMonth(nextDueDate.getMonth() + 1);
-      break;
-
-    default:
-      // Default to daily if pattern not recognized
-      nextDueDate.setDate(nextDueDate.getDate() + 1);
+      default:
+        // Default to daily if pattern not recognized
+        nextDueDate.setDate(nextDueDate.getDate() + 1);
+    }
   }
 
   return nextDueDate;

@@ -1,6 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import mongoose from 'mongoose';
-import { Task } from '../models/taskModel';
+import { Task, ITask } from '../models/taskModel';
 import {
   createTask,
   getTask,
@@ -11,6 +11,7 @@ import {
 } from '../controllers/taskController';
 import { StatusCodes } from 'http-status-codes';
 import { validationMessages } from '../constants/messages';
+import { TaskPriority, TaskStatus } from '../constants/taskEnums';
 
 // Mock the mongoose model
 jest.mock('../models/taskModel');
@@ -27,7 +28,7 @@ describe('Task Controller', () => {
   let req: Partial<Request>;
   let res: Partial<Response>;
   let next: jest.MockedFunction<NextFunction>;
-  let mockTaskData: any;
+  let mockTaskData: Partial<ITask>;
   let mockTaskId: string;
 
   beforeEach(() => {
@@ -38,8 +39,8 @@ describe('Task Controller', () => {
     mockTaskData = {
       _id: mockTaskId,
       title: 'Test Task',
-      status: 'notDone',
-      priority: 'medium',
+      status: TaskStatus.NOT_DONE,
+      priority: TaskPriority.MEDIUM,
       isRecurring: false,
       isDependency: false,
       dependencies: [],

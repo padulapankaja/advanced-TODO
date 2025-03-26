@@ -1,7 +1,6 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import React from "react";
 import { FormData } from "../types/todoTypes";
-
+import { TaskStatus } from "../types/todoTypes";
 interface TaskCardProps {
   task: FormData;
   onComplete?: (task: FormData) => void;
@@ -20,7 +19,6 @@ const TaskCard: React.FC<TaskCardProps> = ({
   const {
     title,
     priority,
-    dueDate,
     isRecurring,
     isDependency,
     recurrencePattern,
@@ -53,7 +51,7 @@ const TaskCard: React.FC<TaskCardProps> = ({
         return "border-gray-300";
     }
   };
-  const completedBackground = (status: string) => {
+  const completedBackground = (status: TaskStatus) => {
     switch (status.toLowerCase()) {
       case "notDone":
         return "bg-[#f7f7f7]";
@@ -64,10 +62,6 @@ const TaskCard: React.FC<TaskCardProps> = ({
     }
   };
 
-  const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
-    return date.toLocaleDateString();
-  };
   const truncTitle = (title: string) => {
     return title.length > 40 ? title.slice(0, 40) + "..." : title;
   };
@@ -98,7 +92,7 @@ const TaskCard: React.FC<TaskCardProps> = ({
   return (
     <div
       className={`${completedBackground(
-        status
+        status.toString() as TaskStatus
       )} rounded-md shadow-md p-4 m-4 border-l-4 ${getCardBorder(priority)}`}
     >
       <div className="flex h-full justify-between flex-col">
@@ -126,24 +120,6 @@ const TaskCard: React.FC<TaskCardProps> = ({
           </div>
 
           <div className="flex mt-3 text-sm text-gray-600 ">
-            <div className="flex items-center mr-4">
-              <svg
-                className="h-4 w-4 mr-1"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-                xmlns="http://www.w3.org/2000/svg"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth="2"
-                  d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
-                ></path>
-              </svg>
-              <span>Due: {formatDate(dueDate)}</span>
-            </div>
-
             <div className="flex">
               {isRecurring && (
                 <div className="flex items-center mt-1">
@@ -187,11 +163,11 @@ const TaskCard: React.FC<TaskCardProps> = ({
                   <span>Depends on:</span>
                 </div>
                 <div className="flex flex-wrap">
-                  {dependencies.map((dep: any) => (
+                  {dependencies.map((dep: FormData) => (
                     <span
                       key={dep._id}
                       className={`${completedBackground(
-                        dep.status
+                        dep.status.toString() as TaskStatus
                       )} rounded-md px-2 w-full py-1 text-xs font-medium m-1 border-l-2 text-black ${getCardBorder(
                         dep.priority
                       )}`}

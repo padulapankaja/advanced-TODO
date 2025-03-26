@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { useDispatch, useSelector } from "react-redux";
 import { useState, useCallback, useMemo, useEffect } from "react";
 import {
@@ -24,7 +23,7 @@ import FilterComponent from "./components/FilterComponent";
 import { FormData } from "./types/todoTypes";
 import { getNotificationMessage } from "./utils";
 import TaskPopup from "./components/TaskPopup";
-
+import {AppDispatch, RootState } from './state/store'
 type DependentTask = {
   _id: string;
   title: string;
@@ -33,12 +32,15 @@ type Notification = {
   type: "error" | "success" | "warning"
   message: string;
 };
-const today = new Date().toISOString().split("T")[0];
+interface Filters {
+  status: string[];
+  priority: string[];
+}
 
 const App = () => {
-  const dispatch = useDispatch();
-  const taskToDelete = useSelector((state: any) => state.todos?.taskToDelete);
-  const taskToUpdate = useSelector((state: any) => state.todos?.taskToUpdate);
+  const dispatch = useDispatch<AppDispatch>();
+  const taskToDelete = useSelector((state: RootState) => state.todos?.taskToDelete);
+  const taskToUpdate = useSelector((state: RootState) => state.todos?.taskToUpdate);
 
   // Mutations & Queries
   const [createTodos, { isSuccess: isCreated }] = useCreateTodosMutation();
@@ -67,8 +69,8 @@ const App = () => {
   const inCompletedTasks = useMemo(
     () =>
       filteredTodos?.tasks.filter(
-        (task: any) =>
-          task.status === "notDone" && task.dueDate.split("T")[0] >= today
+        (task: FormData) =>
+          task.status === "notDone"
       ) || [],
     [filteredTodos]
   );
@@ -94,7 +96,6 @@ useEffect(() => {
           title: data.title,
           status: "notDone",
           priority: data.priority,
-          dueDate: data.dueDate,
           isRecurring: data.isRecurrent,
           recurrencePattern: data.isRecurrent
             ? data.recurrencePattern
@@ -110,8 +111,12 @@ useEffect(() => {
         await createTodos(todoData).unwrap();
         setSearchParams({});
         refetch();
-      } catch (err: any) {
-        console.error("Failed to create task:", err);
+      } catch (err) {
+        if (err instanceof Error) {
+          console.error("Failed to create task:", err.message);
+        } else {
+          console.error("An unexpected error occurred:", err);
+        }
       }
     },
     [createTodos, refetch]
@@ -147,7 +152,8 @@ useEffect(() => {
     [updateStatusTodos, refetch]
   );
 
-  const handleFilterApply = useCallback((filters: any) => {
+  const handleFilterApply = useCallback((filters: Filters) => {
+    console.log("filters", filters);
     setSearchParams(filters);
   }, []);
 
@@ -159,10 +165,10 @@ useEffect(() => {
 
       const tasksWithDependency =
         filteredTodos?.tasks
-          .filter((t: any) =>
-            t.dependencies.some((dep: any) => dep._id === task._id)
+          .filter((t: FormData) =>
+            t.dependencies?.some((dep: FormData) => dep._id === task._id)
           )
-          .map((t: any) => ({ _id: t._id, title: t.title })) || [];
+          .map((t: FormData) => ({ _id: t._id, title: t.title })) || [];
 
       if (tasksWithDependency.length > 0) {
         setDependentRoot(tasksWithDependency);
@@ -185,7 +191,6 @@ useEffect(() => {
           title: task.title,
           status: task.status,
           priority: task.priority,
-          dueDate: task.dueDate,
           isRecurring: task.isRecurrent,
           recurrencePattern: task.isRecurrent
             ? task.recurrencePattern
@@ -198,7 +203,7 @@ useEffect(() => {
             : [],
         };
         setUpdateTask(false);
-        await updateTodos({ id: taskToUpdate._id, todoData }).unwrap();
+        await updateTodos({ id: taskToUpdate?._id, todoData }).unwrap();
         dispatch(confirmUpdateTask());
         refetch();
       } catch (err) {
@@ -227,7 +232,7 @@ useEffect(() => {
           </div>
         </div>
 
-        <div className="w-full lg:w-1/3">
+        <div className="w-full lg:w-1/2">
           <FilterComponent
             onFilterApply={handleFilterApply}
             taskStats={filteredTodos?.stat}
@@ -238,7 +243,7 @@ useEffect(() => {
       <div className="border-t-6 border-gray-200 h-1 m-4"></div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-        {filteredTodos?.tasks.map((task: any) => (
+        {filteredTodos?.tasks.map((task: FormData) => (
           <TaskCard
             task={task}
             key={task._id}

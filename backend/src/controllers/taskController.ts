@@ -1,6 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import mongoose from 'mongoose';
-import { Task } from '../models/taskModel';
+import { ITask, Task } from '../models/taskModel';
 import { StatusCodes } from 'http-status-codes';
 import { validationMessages } from '../constants/messages';
 export const createTask = async (req: Request, res: Response, next: NextFunction) => {
@@ -41,7 +41,7 @@ export const getTask = async (req: Request, res: Response, next: NextFunction) =
 
 export const searchTasks = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const { title, status, priority, isRecurring, dueDate, isDependency } = req.query;
+    const { title, status, priority, isRecurring, isDependency } = req.query;
 
     const filter: any = {};
 
@@ -51,7 +51,6 @@ export const searchTasks = async (req: Request, res: Response, next: NextFunctio
     if (priority) filter.priority = { $in: String(priority).split(',') };
     if (isRecurring !== undefined) filter.isRecurring = isRecurring === 'true';
     if (isDependency !== undefined) filter.isDependency = isDependency === 'true';
-    if (dueDate) filter.dueDate = { $gte: new Date(String(dueDate)) };
 
     const [tasks, stats] = await Promise.all([
       Object.keys(req.query).length > 0
@@ -165,10 +164,12 @@ export const updateStatus = async (req: Request, res: Response, next: NextFuncti
       return;
     }
 
-    const checkTask = await Task.findById(req.params.id).populate('dependencies');
+    const checkTask = await Task.findById(req.params.id).populate<{ dependencies: ITask[] }>(
+      'dependencies',
+    );
     if (checkTask) {
       if (req.body.status === 'done') {
-        const com = checkTask.dependencies?.every((dep: any) => dep.status === 'done');
+        const com = checkTask.dependencies?.every((dep) => dep.status === 'done');
         if (!com) {
           res.status(StatusCodes.BAD_REQUEST).json({
             status: StatusCodes.BAD_REQUEST,

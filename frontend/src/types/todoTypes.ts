@@ -2,7 +2,6 @@ export type FormData = {
   _id?: string;
   title: string;
   priority: string;
-  dueDate: string;
   isRecurrent: boolean;
   isDependent: boolean;
   recurrencePattern?: string;
@@ -13,3 +12,7 @@ export type FormData = {
   createdAt?: string;
   updatedAt?: string;
 };
+
+export type TaskStatus = "done" | "notDone";
+export type FilterType = "status" | "priority";
+export type PriorityKey = "low" | "medium" | "high";
