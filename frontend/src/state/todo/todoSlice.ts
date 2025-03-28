@@ -1,10 +1,9 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 import { FormData } from '../../types/todoTypes'
 
 interface TodoState {
-  taskToDelete: any | null;
-  taskToUpdate: any | null;
+  taskToDelete: FormData | null;
+  taskToUpdate: FormData | null;
 }
 
 const initialState: TodoState = {
@@ -35,7 +34,7 @@ const todoSlice = createSlice({
     },
     // Action to confirm deletion and remove the task from tasks
     confirmUpdateTask: (state) => {
-      state.taskToUpdate = null; // Clear the taskToUpdate after deletion
+      state.taskToUpdate = null;
     },
     // Action to cancel the deletion (reset taskToUpdate)
     cancelUpdateTask: (state) => {

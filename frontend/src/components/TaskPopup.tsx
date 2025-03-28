@@ -1,8 +1,8 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { Dialog } from "@headlessui/react";
 import { useSelector } from "react-redux";
 import TaskForm from "./Form";
 import { FormData } from "../types/todoTypes";
+import { RootState } from "../state/store";
 
 interface ConfirmationModalProps {
   open: boolean;
@@ -17,7 +17,7 @@ export default function TaskPopup({
   inCompleted,
   onSubmit,
 }: ConfirmationModalProps) {
-  const taskToUpdate = useSelector((state: any) => state.todos?.taskToUpdate);
+  const taskToUpdate = useSelector((state: RootState) => state.todos?.taskToUpdate) || {} as FormData;;
 
   const handleUpdate = (data: FormData) => {
     if (onSubmit) {

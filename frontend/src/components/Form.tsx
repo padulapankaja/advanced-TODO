@@ -38,9 +38,6 @@ const TaskForm: React.FC<TaskFormProps> = ({
   } = useForm<FormData>({
     defaultValues: {
       title: data?.title || "",
-      dueDate: data?.dueDate
-        ? new Date(data.dueDate).toISOString().split("T")[0]
-        : "",
       priority: data?.priority || "low",
       isRecurrent: data?.isRecurring || false,
       isDependent: data?.isDependency || false,
@@ -113,16 +110,7 @@ const TaskForm: React.FC<TaskFormProps> = ({
               required
             />
 
-            <InputField
-              id="dueDate"
-              label="Due Date"
-              type="date"
-              register={register}
-              required
-              errorMessage={errors.dueDate?.message}
-              autoComplete="dueDate"
-              minDate={true}
-            />
+    
 
             <ToggleSwitch
               id="isRecurrent"
