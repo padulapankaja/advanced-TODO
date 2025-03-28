@@ -12,16 +12,3 @@ createRoot(document.getElementById("root")!).render(
     </Provider>
   </React.StrictMode>
 );
-
-/// remove as types
-/// remove as types
-/// remove as types
-/// remove as types
-/// remove as types
-/// remove as types
-/// remove as types
-/// remove as types
-/// remove as types
-/// remove as types
-/// remove as types
-/// remove as types
