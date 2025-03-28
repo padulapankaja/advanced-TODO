@@ -29,7 +29,7 @@ import {
   Notification,
   NotificationType,
 } from "./types/todoTypes";
-import ErrorBoundary from './components/ErrorBoundry';
+import ErrorBoundary from './components/ErrorBoundary';
 
 const App = () => {
   const dispatch = useDispatch<AppDispatch>();
@@ -235,7 +235,7 @@ const App = () => {
       </button>
     </div>
   );
-
+  
   if (isFiltering) return <p>Loading...</p>;
   if (filterError) return <p>Error: {JSON.stringify(filterError)}</p>;
 
