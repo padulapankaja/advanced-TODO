@@ -29,6 +29,7 @@ import {
   Notification,
   NotificationType,
 } from "./types/todoTypes";
+import ErrorBoundary from './components/ErrorBoundry';
 
 const App = () => {
   const dispatch = useDispatch<AppDispatch>();
@@ -221,12 +222,25 @@ const App = () => {
     },
     [pageLimit]
   );
-  console.log("filteredTodos", filteredTodos);
+
+  const AppErrorFallback = () => (
+    <div className="p-4 bg-red-100 text-red-800 rounded-md">
+      <h2 className="text-xl font-bold mb-2">Oops! Something went wrong with the Todo App.</h2>
+      <p>We're unable to load your tasks right now. Please try refreshing the page or contact support.</p>
+      <button 
+        className="mt-4 px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600"
+        onClick={() => window.location.reload()}
+      >
+        Reload Page
+      </button>
+    </div>
+  );
 
   if (isFiltering) return <p>Loading...</p>;
   if (filterError) return <p>Error: {JSON.stringify(filterError)}</p>;
 
   return (
+    <ErrorBoundary fallback={<AppErrorFallback />}>
     <>
       <Header />
       <div className="flex flex-col lg:flex-row">
@@ -303,6 +317,7 @@ const App = () => {
         />
       )}
     </>
+    </ErrorBoundary>
   );
 };
 
