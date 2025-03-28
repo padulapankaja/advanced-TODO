@@ -38,6 +38,7 @@ export default function ConfirmationModal({
                   <ExclamationTriangleIcon
                     aria-hidden="true"
                     className="size-6 text-red-600"
+                     data-testid="exclamation-triangle-icon"
                   />
                 </div>
                 <div className="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left">

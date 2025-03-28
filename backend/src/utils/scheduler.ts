@@ -3,7 +3,6 @@ import { Task, ITaskBase } from '../models/taskModel';
 
 const getCurrentTime = () => new Date().toLocaleTimeString();
 
-// For testing, you can run more frequently: '* * * * *' (every minute)
 cron.schedule('0 0 * * *', async () => {
   console.log(`[${getCurrentTime()}] Running daily recurring task check...`);
   try {
@@ -11,50 +10,27 @@ cron.schedule('0 0 * * *', async () => {
     const today = new Date(now);
     today.setHours(0, 0, 0, 0);
 
-    const tomorrow = new Date(today);
-    tomorrow.setDate(tomorrow.getDate() + 1);
-
-    // Find all recurring tasks not due today or in the past
+    // Find all recurring tasks
     const recurringTasks: ITaskBase[] = await Task.find({
       isRecurring: true,
-      dueDate: { $gte: tomorrow },
     });
 
     console.log(`[${getCurrentTime()}] Found ${recurringTasks.length} recurring tasks to process.`);
 
     for (const task of recurringTasks) {
-      if (!task.dueDate) {
-        console.warn(`[${getCurrentTime()}] Task "${task.title}" has no due date, skipping.`);
-        continue;
-      }
-      const taskDueDate = new Date(task.dueDate);
-      const taskDueDateStart = new Date(taskDueDate);
-      taskDueDateStart.setHours(0, 0, 0, 0); // Reset to start of the day for date comparison
-
-      // Skip tasks that are due in the future
-      if (taskDueDateStart > today) {
-        console.log(
-          `[${getCurrentTime()}] Skipping future task: ${task.title}, Due: ${taskDueDate}`,
-        );
-        continue;
-      }
-
-      console.log(`[${getCurrentTime()}] Processing task: ${task.title}, Due: ${taskDueDate}`);
-
-      // For tasks due today or in the past, check if next instance already exists
-      const taskPattern = task.recurrencePattern?.toLowerCase();
-
       // Calculate the next due date based on the recurrence pattern
-      const nextDueDate = calculateNextDueDate(taskDueDate, taskPattern);
+      const taskPattern = task.recurrencePattern?.toLowerCase();
+      const nextDueDate = calculateNextDueDate(now, taskPattern);
+
       if (!nextDueDate) {
         console.warn(`[${getCurrentTime()}] No next due date calculated for task: ${task.title}`);
         continue;
       }
+
       const nextDueDateStart = new Date(nextDueDate);
       nextDueDateStart.setHours(0, 0, 0, 0); // Reset to start of the day for date comparison
 
-      // First check if there's already any task with the same title due on the next date
-      // This is a more thorough check that will find any tasks with the same title due on that day
+      // Check if a task with the same title already exists for the next due date
       const existingTasksForNextDay = await Task.find({
         title: task.title,
         dueDate: {
@@ -63,24 +39,7 @@ cron.schedule('0 0 * * *', async () => {
         },
       });
 
-      if (existingTasksForNextDay.length > 0) {
-        console.log(
-          `[${getCurrentTime()}] Found ${existingTasksForNextDay.length} existing tasks for "${task.title}" on ${nextDueDateStart.toDateString()}, skipping creation`,
-        );
-        continue;
-      }
-
-      // Now check for exact match with time as a secondary check
-      const exactMatchTask = await Task.findOne({
-        title: task.title,
-        dueDate: nextDueDate,
-      });
-
-      if (exactMatchTask) {
-        console.log(
-          `[${getCurrentTime()}] Skipped duplicate task (exact match): ${task.title} for ${nextDueDate}`,
-        );
-      } else {
+      if (existingTasksForNextDay.length === 0) {
         // Create a new instance of the recurring task
         const newTask = new Task({
           title: task.title,
@@ -95,6 +54,10 @@ cron.schedule('0 0 * * *', async () => {
 
         await newTask.save();
         console.log(`[${getCurrentTime()}] Created new task: ${task.title} for ${nextDueDate}`);
+      } else {
+        console.log(
+          `[${getCurrentTime()}] Found ${existingTasksForNextDay.length} existing tasks for "${task.title}" on ${nextDueDateStart.toDateString()}, skipping creation`,
+        );
       }
     }
   } catch (error) {
@@ -102,9 +65,10 @@ cron.schedule('0 0 * * *', async () => {
   }
 });
 
-//Calculate the next due date based on the recurrence pattern
-function calculateNextDueDate(currentDueDate: Date, recurrencePattern?: string) {
-  const nextDueDate = new Date(currentDueDate);
+// Calculate the next due date based on the recurrence pattern
+function calculateNextDueDate(currentDate: Date, recurrencePattern?: string) {
+  const nextDueDate = new Date(currentDate);
+
   if (recurrencePattern === undefined) {
     return;
   } else {
@@ -118,7 +82,6 @@ function calculateNextDueDate(currentDueDate: Date, recurrencePattern?: string) 
       case 'monthly':
         nextDueDate.setMonth(nextDueDate.getMonth() + 1);
         break;
-
       default:
         // Default to daily if pattern not recognized
         nextDueDate.setDate(nextDueDate.getDate() + 1);

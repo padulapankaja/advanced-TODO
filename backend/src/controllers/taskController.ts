@@ -41,9 +41,12 @@ export const getTask = async (req: Request, res: Response, next: NextFunction) =
 
 export const searchTasks = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const { title, status, priority, isRecurring, isDependency } = req.query;
+    const { title, status, priority, isRecurring, isDependency, page = 1, limit = 3 } = req.query;
 
     const filter: any = {};
+    const pageNumber = Math.max(1, Number(page));
+    const limitNumber = Math.max(1, Number(limit));
+    const skip = (pageNumber - 1) * limitNumber;
 
     // add conditions that
     if (title) filter.title = { $regex: new RegExp(String(title), 'i') };
@@ -52,10 +55,14 @@ export const searchTasks = async (req: Request, res: Response, next: NextFunctio
     if (isRecurring !== undefined) filter.isRecurring = isRecurring === 'true';
     if (isDependency !== undefined) filter.isDependency = isDependency === 'true';
 
-    const [tasks, stats] = await Promise.all([
-      Object.keys(req.query).length > 0
-        ? Task.find(filter).sort({ updatedAt: -1 }).populate('dependencies')
-        : Task.find().sort({ updatedAt: -1 }).populate('dependencies'),
+    const [tasks, totalTasks, stats] = await Promise.all([
+      Task.find(filter)
+        .sort({ updatedAt: -1 })
+        .populate('dependencies')
+        .skip(skip)
+        .limit(limitNumber),
+
+      Task.countDocuments(filter),
 
       // Use MongoDB aggregation for statistics
       Task.aggregate([
@@ -82,6 +89,12 @@ export const searchTasks = async (req: Request, res: Response, next: NextFunctio
     res.status(StatusCodes.OK).json({
       tasks,
       stat: taskStats,
+      pagination: {
+        totalTasks,
+        totalPages: Math.ceil(totalTasks / limitNumber),
+        currentPage: pageNumber,
+        pageSize: limitNumber,
+      },
     });
   } catch (error) {
     next(error);

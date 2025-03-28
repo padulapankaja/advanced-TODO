@@ -17,10 +17,13 @@
 
     /* Linting */
     "strict": true,
-    "noUnusedLocals": true,
+    "noUnusedLocals": true, 
     "noUnusedParameters": true,
     "noFallthroughCasesInSwitch": true,
-    "noUncheckedSideEffectImports": true
+    "noUncheckedSideEffectImports": true,
+    
+    "types": ["vitest/globals", "@testing-library/jest-dom"]
+
   },
   "include": ["src"]
 }

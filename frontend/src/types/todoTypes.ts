@@ -16,3 +16,17 @@ export type FormData = {
 export type TaskStatus = "done" | "notDone";
 export type FilterType = "status" | "priority";
 export type PriorityKey = "low" | "medium" | "high";
+export type NotificationType = "error" | "success" | "warning"
+
+export type DependentTask = {
+  _id: string;
+  title: string;
+};
+export type Notification = {
+  type: "error" | "success" | "warning"
+  message: string;
+};
+export interface Filters {
+  status: string[];
+  priority: string[];
+}
