@@ -1,12 +1,5 @@
 import React from "react";
-
-interface ButtonProps {
-  onClick?: () => void;
-  children: React.ReactNode;
-  variant?: "primary" | "secondary" | "danger";
-  size?: "small" | "medium" | "large";
-  disabled?: boolean;
-}
+import { ButtonProps } from "../../types/todoTypes";
 
 const Button: React.FC<ButtonProps> = ({
   onClick,
@@ -31,9 +24,9 @@ const Button: React.FC<ButtonProps> = ({
     <button
       onClick={onClick}
       disabled={disabled}
-      className={`${baseClasses} ${variantClasses[variant]} ${sizeClasses[size]} ${
-        disabled ? "opacity-50 cursor-not-allowed" : ""
-      }`}
+      className={`${baseClasses} ${variantClasses[variant]} ${
+        sizeClasses[size]
+      } ${disabled ? "opacity-50 cursor-not-allowed" : ""}`}
     >
       {children}
     </button>

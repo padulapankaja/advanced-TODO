@@ -1,11 +1,4 @@
-import { ReactNode } from "react";
-
-interface StatCardProps {
-  title: string;
-  value: number | string;
-  icon: ReactNode;
-  color: string;
-}
+import { StatCardProps } from "../../types/todoTypes";
 
 const StatCard: React.FC<StatCardProps> = ({ title, value, icon, color }) => {
   return (

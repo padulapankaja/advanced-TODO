@@ -1,6 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
 import mongoose from 'mongoose';
-import { Task } from '../models/taskModel';
+import { FilterQuery } from 'mongoose';
+import { ITask, Task } from '../models/taskModel';
 import { StatusCodes } from 'http-status-codes';
 import { validationMessages } from '../constants/messages';
 export const createTask = async (req: Request, res: Response, next: NextFunction) => {
@@ -41,9 +42,12 @@ export const getTask = async (req: Request, res: Response, next: NextFunction) =
 
 export const searchTasks = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const { title, status, priority, isRecurring, dueDate, isDependency } = req.query;
+    const { title, status, priority, isRecurring, isDependency, page = 1, limit = 3 } = req.query;
 
-    const filter: any = {};
+    const filter: FilterQuery<ITask> = {};
+    const pageNumber = Math.max(1, Number(page));
+    const limitNumber = Math.max(1, Number(limit));
+    const skip = (pageNumber - 1) * limitNumber;
 
     // add conditions that
     if (title) filter.title = { $regex: new RegExp(String(title), 'i') };
@@ -51,12 +55,15 @@ export const searchTasks = async (req: Request, res: Response, next: NextFunctio
     if (priority) filter.priority = { $in: String(priority).split(',') };
     if (isRecurring !== undefined) filter.isRecurring = isRecurring === 'true';
     if (isDependency !== undefined) filter.isDependency = isDependency === 'true';
-    if (dueDate) filter.dueDate = { $gte: new Date(String(dueDate)) };
 
-    const [tasks, stats] = await Promise.all([
-      Object.keys(req.query).length > 0
-        ? Task.find(filter).sort({ updatedAt: -1 }).populate('dependencies')
-        : Task.find().sort({ updatedAt: -1 }).populate('dependencies'),
+    const [tasks, totalTasks, stats] = await Promise.all([
+      Task.find(filter)
+        .sort({ updatedAt: -1 })
+        .populate('dependencies')
+        .skip(skip)
+        .limit(limitNumber),
+
+      Task.countDocuments(filter),
 
       // Use MongoDB aggregation for statistics
       Task.aggregate([
@@ -83,6 +90,12 @@ export const searchTasks = async (req: Request, res: Response, next: NextFunctio
     res.status(StatusCodes.OK).json({
       tasks,
       stat: taskStats,
+      pagination: {
+        totalTasks,
+        totalPages: Math.ceil(totalTasks / limitNumber),
+        currentPage: pageNumber,
+        pageSize: limitNumber,
+      },
     });
   } catch (error) {
     next(error);
@@ -165,10 +178,12 @@ export const updateStatus = async (req: Request, res: Response, next: NextFuncti
       return;
     }
 
-    const checkTask = await Task.findById(req.params.id).populate('dependencies');
+    const checkTask = await Task.findById(req.params.id).populate<{ dependencies: ITask[] }>(
+      'dependencies',
+    );
     if (checkTask) {
       if (req.body.status === 'done') {
-        const com = checkTask.dependencies?.every((dep: any) => dep.status === 'done');
+        const com = checkTask.dependencies?.every((dep) => dep.status === 'done');
         if (!com) {
           res.status(StatusCodes.BAD_REQUEST).json({
             status: StatusCodes.BAD_REQUEST,
@@ -188,6 +203,20 @@ export const updateStatus = async (req: Request, res: Response, next: NextFuncti
     }
 
     res.status(StatusCodes.OK).json(update);
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const getIncompleteTask = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const tasks = await Task.find(
+      {
+        status: 'notDone',
+      },
+      { _id: 1, title: 1 },
+    );
+    res.json(tasks);
   } catch (error) {
     next(error);
   }

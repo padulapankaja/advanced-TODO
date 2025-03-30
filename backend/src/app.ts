@@ -72,6 +72,3 @@ app.use((req, res) => {
 app.use(errorHandler);
 
 export default app;
-
-// TODO:
-// need to add validation for check  values define in the .env file

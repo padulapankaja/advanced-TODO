@@ -1,15 +1,4 @@
-import { UseFormRegister } from "react-hook-form";
-import { FormData } from "../../types/todoTypes";
-
-// Toggle Switch Component
-interface ToggleSwitchProps {
-  id: string;
-  label: string;
-  isChecked: boolean;
-  register: UseFormRegister<FormData>;
-  onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
-  children?: React.ReactNode;
-}
+import { FormData, ToggleSwitchProps } from "../../types/todoTypes";
 
 export const ToggleSwitch: React.FC<ToggleSwitchProps> = ({
   id,

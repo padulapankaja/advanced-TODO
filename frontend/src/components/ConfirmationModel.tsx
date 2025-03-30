@@ -1,19 +1,6 @@
 import { Dialog } from "@headlessui/react";
 import { ExclamationTriangleIcon } from "@heroicons/react/24/outline";
-type dependentTask = {
-  _id: string;
-  title: string;
-};
-interface ConfirmationModalProps {
-  open: boolean;
-  title: string;
-  message: string;
-  option1: string;
-  option2: string;
-  onConfirm?: () => void;
-  onCancel?: () => void;
-  dependentTasks?: dependentTask[];
-}
+import { ConfirmationModalProps, DependentTask } from "../types/todoTypes";
 
 export default function ConfirmationModal({
   open,
@@ -26,7 +13,11 @@ export default function ConfirmationModal({
   dependentTasks,
 }: ConfirmationModalProps) {
   return (
-    <Dialog open={open} onClose={onCancel ?? (() => {})}  className="relative z-10">
+    <Dialog
+      open={open}
+      onClose={onCancel ?? (() => {})}
+      className="relative z-10"
+    >
       <div className="fixed inset-0 bg-gray-500/75" />
 
       <div className="fixed inset-0 z-10 w-screen overflow-y-auto">
@@ -38,6 +29,7 @@ export default function ConfirmationModal({
                   <ExclamationTriangleIcon
                     aria-hidden="true"
                     className="size-6 text-red-600"
+                    data-testid="exclamation-triangle-icon"
                   />
                 </div>
                 <div className="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left">
@@ -55,7 +47,7 @@ export default function ConfirmationModal({
                           !Dependent Tasks
                         </h4>
                         <ul className="mt-2 text-sm text-gray-500">
-                          {dependentTasks.map((task: dependentTask) => (
+                          {dependentTasks.map((task: DependentTask) => (
                             <li key={task._id} className="mt-1">
                               {task.title}
                             </li>

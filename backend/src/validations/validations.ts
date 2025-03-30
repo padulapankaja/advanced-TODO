@@ -8,12 +8,6 @@ export const createTaskSchema = z
     title: z.string().min(1, 'Title is required'),
     status: z.nativeEnum(TaskStatus),
     priority: z.nativeEnum(TaskPriority),
-    dueDate: z
-      .string()
-      .optional()
-      .refine((date) => {
-        return !date || !isNaN(Date.parse(date));
-      }, validationMessages.invalidDate),
     dependencies: z
       .array(z.string().regex(/^[0-9a-fA-F]{24}$/, validationMessages.invalidObjectId))
       .optional(),
@@ -27,13 +21,6 @@ export const updateTaskSchema = z.object({
   title: z.string().min(1, validationMessages.titleRequired).optional(),
   status: z.nativeEnum(TaskStatus).optional(),
   priority: z.nativeEnum(TaskPriority).optional(),
-  dueDate: z
-    .string()
-    .optional()
-    .refine((date) => {
-      return !date || !isNaN(Date.parse(date));
-    }, validationMessages.invalidDate),
-
   isRecurring: z.boolean().optional(),
   isDependency: z.boolean().optional(),
   recurrencePattern: z.nativeEnum(RecurrencePattern).optional(),

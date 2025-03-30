@@ -1,10 +1,10 @@
 import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
-
 export const todoApi = createApi({
   reducerPath: "todoApi",
   tagTypes: ["Todo"],
   baseQuery: fetchBaseQuery({
     baseUrl: "http://advancedtodo-dev.us-east-1.elasticbeanstalk.com/api/v1",
+    // baseUrl: "http://localhost:4002/api/v1",
   }),
   // refetchOnFocus: true, // refetch data when window regains focus
   // keepUnusedDataFor: 10, // clear cache after 10 seconds
@@ -27,6 +27,13 @@ export const todoApi = createApi({
         { type: "Todo", id: _id },
       ],
     }),
+    getIncompleteTodos: builder.query({
+      query: () => ({
+        url: "tasks/incomplete",
+        method: "GET",
+      }),
+      providesTags: ["Todo"],
+    }),
     deleteTodos: builder.mutation({
       query: (id) => ({
         url: `/tasks/${id}`,
@@ -43,10 +50,15 @@ export const todoApi = createApi({
       invalidatesTags: ["Todo"],
     }),
     searchTodos: builder.query({
-      query: (params) => {
-        const queryParams = new URLSearchParams(params).toString();
-        return `/tasks/search?${queryParams}`;
-      },
+      query: (filters) => ({
+        url: "tasks/search",
+        method: "GET",
+        params: {
+          ...filters,
+          page: filters.page || 1,
+          limit: filters.limit || 3,
+        },
+      }),
       providesTags: ["Todo"],
     }),
   }),
@@ -55,6 +67,7 @@ export const todoApi = createApi({
 export const {
   useCreateTodosMutation,
   useUpdateTodosMutation,
+  useGetIncompleteTodosQuery,
   useDeleteTodosMutation,
   useUpdateStatusTodosMutation,
   useSearchTodosQuery,

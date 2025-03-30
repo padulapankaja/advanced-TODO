@@ -1,12 +1,13 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import React, { useState } from "react";
 import Button from "./Shared/Button";
 import StatCard from "./Shared/StatCard";
-
-interface FilterProps {
-  onFilterApply: (filters: any) => void;
-  taskStats: any;
-}
+import {
+  TaskStatus,
+  PriorityKey,
+  FilterType,
+  FilterProps,
+  FiltersInput,
+} from "../types/todoTypes";
 
 const FilterComponent: React.FC<FilterProps> = ({
   onFilterApply,
@@ -19,24 +20,19 @@ const FilterComponent: React.FC<FilterProps> = ({
   } = taskStats || {};
 
   // State to hold the selected filters
-  const [filters, setFilters] = useState({
-    status: {
-      done: false,
-      notDone: false,
-    },
-    priority: {
-      low: false,
-      medium: false,
-      high: false,
-    },
+  const [filters, setFilters] = useState<FiltersInput>({
+    status: { done: false, notDone: false },
+    priority: { low: false, medium: false, high: false },
   });
-
   // Handle change in filter checkbox values
   const handleFilterChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const { name, checked } = event.target;
-    const [filterType, filterValue] = name.split(".");
+    const [filterType, filterValue] = name.split(".") as [
+      FilterType,
+      TaskStatus | PriorityKey
+    ];
 
-    setFilters((prevFilters: any) => ({
+    setFilters((prevFilters) => ({
       ...prevFilters,
       [filterType]: {
         ...prevFilters[filterType],
@@ -44,16 +40,14 @@ const FilterComponent: React.FC<FilterProps> = ({
       },
     }));
   };
-
   // Handle the filter apply button click
   const handleFilterSubmit = () => {
-    const selectedStatus = Object.keys(filters.status).filter(
+    const selectedStatus: string[] = Object.keys(filters.status).filter(
       (status) => filters.status[status as keyof typeof filters.status]
     );
-    const selectedPriority = Object.keys(filters.priority).filter(
+    const selectedPriority: string[] = Object.keys(filters.priority).filter(
       (priority) => filters.priority[priority as keyof typeof filters.priority]
     );
-
     // Pass selected filters to the parent
     onFilterApply({
       status: selectedStatus,
@@ -62,7 +56,7 @@ const FilterComponent: React.FC<FilterProps> = ({
   };
 
   const clearFilter = () => {
-    onFilterApply({});
+    onFilterApply({ status: [], priority: [] });
     setFilters({
       status: {
         done: false,
