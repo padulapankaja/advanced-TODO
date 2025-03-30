@@ -1,15 +1,4 @@
-import { UseFormRegister } from "react-hook-form";
-import { FormData } from "../../types/todoTypes";
-
-// Radio Options Component
-interface RadioGroupProps {
-  id: string;
-  label: string;
-  options: { value: string; label: string }[];
-  register: UseFormRegister<FormData>;
-  errorMessage?: string;
-  required?: boolean;
-}
+import { FormData, RadioGroupProps } from "../../types/todoTypes";
 
 export const RadioGroup: React.FC<RadioGroupProps> = ({
   id,

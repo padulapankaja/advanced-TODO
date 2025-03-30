@@ -1,5 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import mongoose from 'mongoose';
+import { FilterQuery } from 'mongoose';
 import { ITask, Task } from '../models/taskModel';
 import { StatusCodes } from 'http-status-codes';
 import { validationMessages } from '../constants/messages';
@@ -43,7 +44,7 @@ export const searchTasks = async (req: Request, res: Response, next: NextFunctio
   try {
     const { title, status, priority, isRecurring, isDependency, page = 1, limit = 3 } = req.query;
 
-    const filter: any = {};
+    const filter: FilterQuery<ITask> = {};
     const pageNumber = Math.max(1, Number(page));
     const limitNumber = Math.max(1, Number(limit));
     const skip = (pageNumber - 1) * limitNumber;
@@ -202,6 +203,20 @@ export const updateStatus = async (req: Request, res: Response, next: NextFuncti
     }
 
     res.status(StatusCodes.OK).json(update);
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const getIncompleteTask = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const tasks = await Task.find(
+      {
+        status: 'notDone',
+      },
+      { _id: 1, title: 1 },
+    );
+    res.json(tasks);
   } catch (error) {
     next(error);
   }

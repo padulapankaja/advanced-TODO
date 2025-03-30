@@ -8,12 +8,13 @@ import {
   FormActions,
 } from "./Shared/index";
 
-import { FormData } from "../types/todoTypes";
+import { FormData, Incomplete } from "../types/todoTypes";
+import { NOTIFICATION_MESSAGES } from "../util/const";
 
 interface TaskFormProps {
   onSubmit: (data: FormData) => void;
   onCancel?: () => void;
-  inCompleted: FormData[];
+  inCompleted?: Incomplete[];
   title: string;
   description: string;
   data?: FormData;
@@ -43,6 +44,7 @@ const TaskForm: React.FC<TaskFormProps> = ({
       isDependent: data?.isDependency || false,
       recurrencePattern: data?.recurrencePattern || "daily",
     },
+    mode: "onBlur",
   });
 
   const isRecurrent = watch("isRecurrent");
@@ -62,7 +64,7 @@ const TaskForm: React.FC<TaskFormProps> = ({
       if (isValid) {
         onSubmit(data);
         reset();
-      } else console.log("Form has errors");
+      } else console.log(NOTIFICATION_MESSAGES.ERROR);
     });
   };
 
@@ -108,9 +110,8 @@ const TaskForm: React.FC<TaskFormProps> = ({
               register={register}
               errorMessage={errors.priority?.message}
               required
+              // ref={priorityRef}
             />
-
-    
 
             <ToggleSwitch
               id="isRecurrent"

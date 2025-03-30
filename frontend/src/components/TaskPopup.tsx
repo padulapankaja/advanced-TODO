@@ -1,15 +1,8 @@
 import { Dialog } from "@headlessui/react";
 import { useSelector } from "react-redux";
 import TaskForm from "./Form";
-import { FormData } from "../types/todoTypes";
+import { FormData, ConfirmationModalProps } from "../types/todoTypes";
 import { RootState } from "../state/store";
-
-interface ConfirmationModalProps {
-  open: boolean;
-  inCompleted: FormData[];
-  onCancel?: () => void;
-  onSubmit: (task: FormData) => void;
-}
 
 export default function TaskPopup({
   open,
@@ -17,18 +10,22 @@ export default function TaskPopup({
   inCompleted,
   onSubmit,
 }: ConfirmationModalProps) {
-  const taskToUpdate = useSelector((state: RootState) => state.todos?.taskToUpdate) || {} as FormData;;
+  const taskToUpdate =
+    useSelector((state: RootState) => state.todos?.taskToUpdate) ||
+    ({} as FormData);
 
   const handleUpdate = (data: FormData) => {
     if (onSubmit) {
       onSubmit(data);
     }
   };
-  console.log("inCompleted", inCompleted);
-  console.log("taskToUpdate", taskToUpdate);
 
   return (
-    <Dialog open={open} onClose={onCancel ?? (() => {})}  className="relative z-10">
+    <Dialog
+      open={open}
+      onClose={onCancel ?? (() => {})}
+      className="relative z-10"
+    >
       <div className="fixed inset-0 bg-gray-500/75" />
 
       <div className="fixed inset-0 z-10 w-screen overflow-y-auto">
@@ -40,7 +37,7 @@ export default function TaskPopup({
                   data={taskToUpdate}
                   onCancel={onCancel}
                   onSubmit={handleUpdate}
-                  inCompleted={inCompleted.filter(
+                  inCompleted={inCompleted?.filter(
                     (task) => task._id !== taskToUpdate._id
                   )}
                   title="Update task"

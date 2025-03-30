@@ -1,17 +1,4 @@
-import { UseFormRegister } from "react-hook-form";
-import { FormData } from "../../types/todoTypes";
-
-interface InputFieldProps {
-  id: string;
-  label: string;
-  type?: React.HTMLInputTypeAttribute;
-  register: UseFormRegister<FormData>;
-  required?: boolean;
-  errorMessage?: string;
-  autoComplete?: string;
-  placeholder?: string;
-  minDate?: boolean;
-}
+import { FormData, InputFieldProps } from "../../types/todoTypes";
 
 export const InputField: React.FC<InputFieldProps> = ({
   id,
@@ -25,7 +12,8 @@ export const InputField: React.FC<InputFieldProps> = ({
   minDate = false,
 }) => {
   const today = new Date().toISOString().split("T")[0];
-  const additionalProps: Partial<React.InputHTMLAttributes<HTMLInputElement>> = {};
+  const additionalProps: Partial<React.InputHTMLAttributes<HTMLInputElement>> =
+    {};
   if (type === "date" && minDate) {
     additionalProps.min = today;
   }

@@ -12,13 +12,11 @@ export const store = configureStore({
     getDefaultMiddleware().concat(todoApi.middleware),
 });
 
-
 // Define RootState type
 export type RootState = ReturnType<typeof store.getState>;
 
 // Define AppDispatch type
 export type AppDispatch = typeof store.dispatch;
-
 
 // optional
 // refetch data when window regains focus

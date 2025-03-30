@@ -1,10 +1,5 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
-import { FormData } from '../../types/todoTypes'
-
-interface TodoState {
-  taskToDelete: FormData | null;
-  taskToUpdate: FormData | null;
-}
+import { FormData, TodoState } from "../../types/todoTypes";
 
 const initialState: TodoState = {
   taskToDelete: null,
@@ -50,7 +45,7 @@ export const {
   cancelDeleteTask,
   setTaskToUpdate,
   cancelUpdateTask,
-  confirmUpdateTask
+  confirmUpdateTask,
 } = todoSlice.actions;
 
 export default todoSlice.reducer;

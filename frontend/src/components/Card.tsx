@@ -1,13 +1,10 @@
 import React from "react";
-import { FormData } from "../types/todoTypes";
-import { TaskStatus } from "../types/todoTypes";
-interface TaskCardProps {
-  task: FormData;
-  onComplete?: (task: FormData) => void;
-  onDelete?: (task: FormData) => void;
-  onUpdate?: (task: FormData) => void;
-  onReopen?: (task: FormData) => void;
-}
+import { TaskStatus, TaskCardProps, FormData } from "../types/todoTypes";
+import {
+  completedBackground,
+  getCardBorder,
+  getPriorityColor,
+} from "../util/util";
 
 const TaskCard: React.FC<TaskCardProps> = ({
   task,
@@ -25,42 +22,6 @@ const TaskCard: React.FC<TaskCardProps> = ({
     dependencies,
     status,
   } = task;
-
-  // Function to determine priority color
-  const getPriorityColor = (priority: string) => {
-    switch (priority.toLowerCase()) {
-      case "high":
-        return "bg-red-100 text-red-800";
-      case "medium":
-        return "bg-yellow-100 text-yellow-800";
-      case "low":
-        return "bg-green-100 text-green-800";
-      default:
-        return "bg-gray-100 text-gray-800";
-    }
-  };
-  const getCardBorder = (priority: string) => {
-    switch (priority.toLowerCase()) {
-      case "high":
-        return "border-red-300";
-      case "medium":
-        return "border-yellow-300";
-      case "low":
-        return "border-green-300";
-      default:
-        return "border-gray-300";
-    }
-  };
-  const completedBackground = (status: TaskStatus) => {
-    switch (status.toLowerCase()) {
-      case "notDone":
-        return "bg-[#f7f7f7]";
-      case "done":
-        return "bg-[#f1fff1]";
-      default:
-        return "bg-[#f7f7f7]";
-    }
-  };
 
   const truncTitle = (title: string) => {
     return title.length > 40 ? title.slice(0, 40) + "..." : title;

@@ -1,20 +1,7 @@
-import { UseFormRegister } from "react-hook-form";
 import { ChevronDownIcon } from "@heroicons/react/16/solid";
-import { FormData } from "../../types/todoTypes";
+import { FormData, SelectProps } from "../../types/todoTypes";
 
-// Select Dropdown Component
-interface SelectProps {
-  id: string;
-  register: UseFormRegister<FormData>;
-  options: { value: string; label: string }[];
-}
-
-export const Select: React.FC<SelectProps> = ({
-  id,
-  register,
-  options,
-}) => {
-
+export const Select: React.FC<SelectProps> = ({ id, register, options }) => {
   return (
     <div className="mt-2 grid grid-cols-1">
       <select
