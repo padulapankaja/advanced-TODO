@@ -268,8 +268,7 @@ const { data: inCompleteTodos = [] } = useGetIncompleteTodosQuery({})
         Reload Page
       </button>
     </div>
-  );
-
+  );  
   if (isFiltering) return <p>Loading...</p>;
   if (filterError) return <p>Error: {JSON.stringify(filterError)}</p>;
 
