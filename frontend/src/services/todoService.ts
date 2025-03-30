@@ -3,8 +3,8 @@ export const todoApi = createApi({
   reducerPath: "todoApi",
   tagTypes: ["Todo"],
   baseQuery: fetchBaseQuery({
-    // baseUrl: "http://advancedtodo-dev.us-east-1.elasticbeanstalk.com/api/v1",
-    baseUrl: "http://localhost:4002/api/v1",
+    baseUrl: "http://advancedtodo-dev.us-east-1.elasticbeanstalk.com/api/v1",
+    // baseUrl: "http://localhost:4002/api/v1",
   }),
   // refetchOnFocus: true, // refetch data when window regains focus
   // keepUnusedDataFor: 10, // clear cache after 10 seconds
