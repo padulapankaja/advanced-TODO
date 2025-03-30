@@ -1,24 +1,13 @@
 import React, { useState } from "react";
 import Button from "./Shared/Button";
 import StatCard from "./Shared/StatCard";
-import { TaskStatus, PriorityKey, FilterType} from '../types/todoTypes'
-type Filters = {
-  status: Record<TaskStatus, boolean>;
-  priority: Record<PriorityKey, boolean>;
-};
-type FilterOptions = {
-  status: string[];
-  priority: string[];
-};
-type taskStatsType = {
-  totalTasks?: number;
-  completedTasks?: number;
-  incompleteTasks?: number;
-}
-interface FilterProps {
-  onFilterApply: (filters: FilterOptions) => void;
-  taskStats: taskStatsType;
-}
+import {
+  TaskStatus,
+  PriorityKey,
+  FilterType,
+  FilterProps,
+  Filters,
+} from "../types/todoTypes";
 
 const FilterComponent: React.FC<FilterProps> = ({
   onFilterApply,
@@ -38,8 +27,11 @@ const FilterComponent: React.FC<FilterProps> = ({
   // Handle change in filter checkbox values
   const handleFilterChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const { name, checked } = event.target;
-    const [filterType, filterValue] = name.split(".") as [FilterType, TaskStatus | PriorityKey];
-  
+    const [filterType, filterValue] = name.split(".") as [
+      FilterType,
+      TaskStatus | PriorityKey
+    ];
+
     setFilters((prevFilters) => ({
       ...prevFilters,
       [filterType]: {
@@ -53,7 +45,7 @@ const FilterComponent: React.FC<FilterProps> = ({
     const selectedStatus: string[] = Object.keys(filters.status).filter(
       (status) => filters.status[status as keyof typeof filters.status]
     );
-    const selectedPriority:string[] = Object.keys(filters.priority).filter(
+    const selectedPriority: string[] = Object.keys(filters.priority).filter(
       (priority) => filters.priority[priority as keyof typeof filters.priority]
     );
     // Pass selected filters to the parent
@@ -61,8 +53,6 @@ const FilterComponent: React.FC<FilterProps> = ({
       status: selectedStatus,
       priority: selectedPriority,
     });
-
-    console.log("Selected Filters: ", selectedStatus, selectedPriority);
   };
 
   const clearFilter = () => {
