@@ -8,13 +8,13 @@ import {
   FormActions,
 } from "./Shared/index";
 
-import { FormData } from "../types/todoTypes";
+import { FormData, Incomplete } from "../types/todoTypes";
 import { NOTIFICATION_MESSAGES } from "../util/const";
 
 interface TaskFormProps {
   onSubmit: (data: FormData) => void;
   onCancel?: () => void;
-  inCompleted?: FormData[];
+  inCompleted?: Incomplete[];
   title: string;
   description: string;
   data?: FormData;

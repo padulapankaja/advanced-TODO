@@ -27,6 +27,13 @@ export const todoApi = createApi({
         { type: "Todo", id: _id },
       ],
     }),
+    getIncompleteTodos: builder.query({
+      query: () => ({
+        url: "tasks/incomplete",
+        method: "GET",
+      }),
+      providesTags: ["Todo"],
+    }),
     deleteTodos: builder.mutation({
       query: (id) => ({
         url: `/tasks/${id}`,
@@ -60,6 +67,7 @@ export const todoApi = createApi({
 export const {
   useCreateTodosMutation,
   useUpdateTodosMutation,
+  useGetIncompleteTodosQuery,
   useDeleteTodosMutation,
   useUpdateStatusTodosMutation,
   useSearchTodosQuery,

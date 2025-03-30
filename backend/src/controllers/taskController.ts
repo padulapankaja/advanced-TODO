@@ -207,3 +207,17 @@ export const updateStatus = async (req: Request, res: Response, next: NextFuncti
     next(error);
   }
 };
+
+export const getIncompleteTask = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const tasks = await Task.find(
+      {
+        status: 'notDone',
+      },
+      { _id: 1, title: 1 },
+    );
+    res.json(tasks);
+  } catch (error) {
+    next(error);
+  }
+};

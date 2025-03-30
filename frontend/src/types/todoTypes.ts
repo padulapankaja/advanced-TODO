@@ -15,6 +15,10 @@ export type FormData = {
   createdAt?: string;
   updatedAt?: string;
 };
+export type Incomplete = {
+  _id: string;
+  title: string;
+};
 
 export type TaskStatus = "done" | "notDone";
 export type FilterType = "status" | "priority";
@@ -112,7 +116,7 @@ export interface ConfirmationModalProps {
   option2: string;
   onConfirm?: () => void;
   dependentTasks?: DependentTask[];
-  inCompleted?: FormData[];
+  inCompleted?: Incomplete[];
   onCancel?: () => void;
   onSubmit?: (task: FormData) => void;
 }
