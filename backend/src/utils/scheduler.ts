@@ -3,6 +3,7 @@ import { Task, ITaskBase } from '../models/taskModel';
 
 const getCurrentTime = () => new Date().toLocaleTimeString();
 
+// Run at midnight every day (0 0 * * *)
 cron.schedule('0 0 * * *', async () => {
   console.log(`[${getCurrentTime()}] Running daily recurring task check...`);
   try {
@@ -18,45 +19,52 @@ cron.schedule('0 0 * * *', async () => {
     console.log(`[${getCurrentTime()}] Found ${recurringTasks.length} recurring tasks to process.`);
 
     for (const task of recurringTasks) {
-      // Calculate the next due date based on the recurrence pattern
       const taskPattern = task.recurrencePattern?.toLowerCase();
-      const nextDueDate = calculateNextDueDate(now, taskPattern);
 
-      if (!nextDueDate) {
-        console.warn(`[${getCurrentTime()}] No next due date calculated for task: ${task.title}`);
+      if (!taskPattern) {
+        console.warn(`[${getCurrentTime()}] No recurrence pattern for task: ${task.title}`);
         continue;
       }
 
-      const nextDueDateStart = new Date(nextDueDate);
-      nextDueDateStart.setHours(0, 0, 0, 0); // Reset to start of the day for date comparison
+      // Check if we should create a new task instance today based on pattern
+      const shouldCreateTask = shouldCreateTaskToday(now, taskPattern);
 
-      // Check if a task with the same title already exists for the next due date
-      const existingTasksForNextDay = await Task.find({
+      if (!shouldCreateTask) {
+        console.log(
+          `[${getCurrentTime()}] Not time to create new task for: ${task.title} (${taskPattern})`,
+        );
+        continue;
+      }
+
+      // Check if a task with the same title already exists that was created by cron
+      const existingTask = await Task.findOne({
         title: task.title,
-        dueDate: {
-          $gte: nextDueDateStart,
-          $lt: new Date(nextDueDateStart.getTime() + 24 * 60 * 60 * 1000),
+        cronCreated: true,
+        isRecurring: true,
+        createdAt: {
+          $gte: getPatternStartDate(now, taskPattern),
+          $lt: getPatternEndDate(now, taskPattern),
         },
       });
 
-      if (existingTasksForNextDay.length === 0) {
+      if (!existingTask) {
         // Create a new instance of the recurring task
         const newTask = new Task({
           title: task.title,
           status: 'notDone',
           priority: task.priority,
-          dueDate: nextDueDate,
-          isRecurring: true,
-          recurrencePattern: task.recurrencePattern,
           dependencies: task.dependencies,
+          isRecurring: true,
+          isDependency: task.isDependency,
           cronCreated: true,
+          recurrencePattern: task.recurrencePattern,
         });
 
         await newTask.save();
-        console.log(`[${getCurrentTime()}] Created new task: ${task.title} for ${nextDueDate}`);
+        console.log(`[${getCurrentTime()}] Created new task: ${task.title} (${taskPattern})`);
       } else {
         console.log(
-          `[${getCurrentTime()}] Found ${existingTasksForNextDay.length} existing tasks for "${task.title}" on ${nextDueDateStart.toDateString()}, skipping creation`,
+          `[${getCurrentTime()}] Task "${task.title}" already exists for current ${taskPattern} period, skipping creation`,
         );
       }
     }
@@ -65,30 +73,75 @@ cron.schedule('0 0 * * *', async () => {
   }
 });
 
-// Calculate the next due date based on the recurrence pattern
-function calculateNextDueDate(currentDate: Date, recurrencePattern?: string) {
-  const nextDueDate = new Date(currentDate);
+// Determine if we should create a task today based on pattern
+function shouldCreateTaskToday(currentDate: Date, pattern: string): boolean {
+  switch (pattern) {
+    case 'daily':
+      return true;
 
-  if (recurrencePattern === undefined) {
-    return;
-  } else {
-    switch (recurrencePattern.toLowerCase()) {
-      case 'daily':
-        nextDueDate.setDate(nextDueDate.getDate() + 1);
-        break;
-      case 'weekly':
-        nextDueDate.setDate(nextDueDate.getDate() + 7);
-        break;
-      case 'monthly':
-        nextDueDate.setMonth(nextDueDate.getMonth() + 1);
-        break;
-      default:
-        // Default to daily if pattern not recognized
-        nextDueDate.setDate(nextDueDate.getDate() + 1);
-    }
+    case 'weekly':
+      // Create a new task only on Mondays (day 1)
+      return currentDate.getDay() === 1;
+
+    case 'monthly':
+      // Create a new task only on the 1st day of the month
+      return currentDate.getDate() === 1;
+
+    default:
+      console.warn(`[${getCurrentTime()}] Unknown pattern: ${pattern}, defaulting to daily`);
+      return true;
   }
+}
 
-  return nextDueDate;
+// Get start date of current pattern period for checking existing tasks
+function getPatternStartDate(currentDate: Date, pattern: string): Date {
+  const startDate = new Date(currentDate);
+  startDate.setHours(0, 0, 0, 0);
+
+  switch (pattern) {
+    case 'daily':
+      // Start of today
+      return startDate;
+
+    case 'weekly': {
+      // Start of current week (Monday)
+      const day = startDate.getDay();
+      const diff = day === 0 ? 6 : day - 1;
+      startDate.setDate(startDate.getDate() - diff);
+      return startDate;
+    }
+
+    case 'monthly':
+      // Start of current month
+      startDate.setDate(1);
+      return startDate;
+
+    default:
+      return startDate;
+  }
+}
+
+// Get end date of current pattern period for checking existing tasks
+function getPatternEndDate(currentDate: Date, pattern: string): Date {
+  const endDate = getPatternStartDate(currentDate, pattern);
+
+  switch (pattern) {
+    case 'daily':
+      endDate.setDate(endDate.getDate() + 1);
+      return endDate;
+
+    case 'weekly':
+      endDate.setDate(endDate.getDate() + 7);
+      return endDate;
+
+    case 'monthly':
+      endDate.setMonth(endDate.getMonth() + 1);
+      return endDate;
+
+    default:
+      endDate.setDate(endDate.getDate() + 1);
+      return endDate;
+  }
 }
 
 export default cron;
