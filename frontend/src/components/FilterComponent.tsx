@@ -6,7 +6,7 @@ import {
   PriorityKey,
   FilterType,
   FilterProps,
-  Filters,
+  FiltersInput,
 } from "../types/todoTypes";
 
 const FilterComponent: React.FC<FilterProps> = ({
@@ -20,7 +20,7 @@ const FilterComponent: React.FC<FilterProps> = ({
   } = taskStats || {};
 
   // State to hold the selected filters
-  const [filters, setFilters] = useState<Filters>({
+  const [filters, setFilters] = useState<FiltersInput>({
     status: { done: false, notDone: false },
     priority: { low: false, medium: false, high: false },
   });

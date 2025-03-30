@@ -150,3 +150,15 @@ export interface TodoState {
   taskToDelete: FormData | null;
   taskToUpdate: FormData | null;
 }
+
+export type FiltersInput = {
+  status: {
+    done: boolean;
+    notDone: boolean;
+  };
+  priority: {
+    low: boolean;
+    medium: boolean;
+    high: boolean;
+  };
+};
