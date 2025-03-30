@@ -4,7 +4,7 @@ import { Task, ITaskBase } from '../models/taskModel';
 const getCurrentTime = () => new Date().toLocaleTimeString();
 
 // Run at midnight every day (0 0 * * *)
-cron.schedule('*/5 * * * * *', async () => {
+cron.schedule('0 0 * * *', async () => {
   console.log(`[${getCurrentTime()}] Running daily recurring task check...`);
   try {
     const now = new Date();
